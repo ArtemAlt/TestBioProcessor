@@ -1,5 +1,6 @@
 package com.example.testbioprocessor.login
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
@@ -28,8 +29,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
 import com.example.testbioprocessor.viewModel.BioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,6 +80,13 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
+                text = "Ваш логин -" + uiState.login,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
                 text = "Введите ваш логин",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
@@ -115,5 +126,17 @@ fun LoginScreen(
                 }
             }
         }
+    }
+}
+
+@SuppressLint("ViewModelConstructorInComposable")
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview8() {
+    TestBioProcessorTheme {
+        LoginScreen({},
+            navController = rememberNavController(),
+            viewModel = BioViewModel()
+        )
     }
 }

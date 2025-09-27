@@ -2,6 +2,7 @@ package com.example.testbioprocessor.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.testbioprocessor.App
 import com.example.testbioprocessor.api.BioApi
 import com.example.testbioprocessor.api.NetworkModule
 import com.example.testbioprocessor.login.LoginUiState
@@ -21,7 +22,8 @@ class BioViewModel() : ViewModel() {
     private val _uiLoginState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<RecognitionUiState> = _uiState.asStateFlow()
     val uiLoginState : StateFlow<LoginUiState> = _uiLoginState.asStateFlow()
-    private val userPreferences: UserPreferences = UserPreferences()
+    private val app: App = App()
+    private val userPreferences: UserPreferences = UserPreferences(app.getAppContext())
     private val _registrationState = MutableStateFlow<RegistrationUiState>(RegistrationUiState.Idle)
 //    val registrationState: StateFlow<RegistrationUiState> = _registrationState.asStateFlow()
 

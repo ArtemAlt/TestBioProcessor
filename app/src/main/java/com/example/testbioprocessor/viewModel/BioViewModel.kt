@@ -1,5 +1,7 @@
 package com.example.testbioprocessor.viewModel
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.testbioprocessor.App
@@ -10,6 +12,7 @@ import com.example.testbioprocessor.login.UserPreferences
 import com.example.testbioprocessor.model.RecognitionRequest
 import com.example.testbioprocessor.model.RecognitionStatus
 import com.example.testbioprocessor.model.RegisterRequest
+import com.example.testbioprocessor.model.camera.CapturedImage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +29,16 @@ class BioViewModel() : ViewModel() {
     private val userPreferences: UserPreferences = UserPreferences(app.getAppContext())
     private val _registrationState = MutableStateFlow<RegistrationUiState>(RegistrationUiState.Idle)
 //    val registrationState: StateFlow<RegistrationUiState> = _registrationState.asStateFlow()
+    private val _capturedImages = mutableStateOf<List<CapturedImage>>(emptyList())
+    val capturedImages: State<List<CapturedImage>> get() = _capturedImages
+
+    fun updateCapturedImages(images: List<CapturedImage>) {
+        _capturedImages.value = images
+    }
+
+    fun clearCapturedImages() {
+        _capturedImages.value = emptyList()
+    }
 
     init {
         loadSavedLogin()
@@ -152,6 +165,7 @@ class BioViewModel() : ViewModel() {
         }
 
     }
+
 }
 
 

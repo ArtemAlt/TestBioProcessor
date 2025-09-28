@@ -55,16 +55,20 @@ class BioViewModel() : ViewModel() {
         }
     }
 
-    fun registerPerson(name: String, base64Images: List<String>) {
+    fun registerPerson(name: String, base64Images: List<String>): Boolean {
         viewModelScope.launch {
             _registrationState.value = RegistrationUiState.Loading
-            val result = api.registerPerson(RegisterRequest(name, base64Images))
+             val result = api.registerPerson(RegisterRequest(name, base64Images))
 
             _registrationState.value = if (result.isSuccessful) {
                 RegistrationUiState.Success(result.body() ?: emptyMap())
             } else {
                 RegistrationUiState.Error(result.message() ?: "Registration failed")
             }
+        }
+        return when(_registrationState.value) {
+            is RegistrationUiState.Success -> true
+            else -> false
         }
     }
 

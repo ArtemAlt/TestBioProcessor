@@ -14,6 +14,7 @@ import com.example.testbioprocessor.login.LoginScreen
 import com.example.testbioprocessor.ui.CheckScreen
 import com.example.testbioprocessor.ui.PreviewScreen
 import com.example.testbioprocessor.ui.RegisterScreen
+import com.example.testbioprocessor.ui.ResultScreen
 import com.example.testbioprocessor.ui.StartScreen
 import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
 import com.example.testbioprocessor.viewModel.BioViewModel
@@ -45,10 +46,13 @@ fun NavigationApp(navController: NavHostController, model: BioViewModel) {
             PreviewScreen(navController = navController)
         }
         composable("registerScreen") {
-            RegisterScreen(navController = navController)
+            RegisterScreen(navController = navController, model)
         }
         composable("checkScreen") {
             CheckScreen(navController = navController)
+        }
+        composable("resultScreen") {
+            ResultScreen(navController = navController)
         }
     }
 }

@@ -11,7 +11,7 @@ import retrofit2.http.POST
 interface BioApi {
     // Health check
     @GET("/health")
-    suspend fun healthCheck(): Response<Unit>
+    suspend fun healthCheck(): Response<String>
 
     // Register person
     @POST("/register")

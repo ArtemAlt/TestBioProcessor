@@ -1,6 +1,5 @@
 package com.example.testbioprocessor.ui
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,29 +12,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.testbioprocessor.camera.MultiImagePicker
 import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
-import com.example.testbioprocessor.viewModel.BioViewModel
 
 @Composable
-fun RegisterScreen(navController: NavHostController,
-                   viewModel: BioViewModel) {
+fun ResultScreen(navController: NavHostController) {
     Scaffold (modifier = Modifier.fillMaxSize()) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "RegisterScreen")
-            MultiImagePicker(navController = navController, viewModel = viewModel)
+            Text(text = "CheckScreen")
         }
     }
 }
 
-@SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview3() {
+fun GreetingPreview9() {
     TestBioProcessorTheme {
-        RegisterScreen(navController = rememberNavController(),
-                viewModel = BioViewModel())
+        ResultScreen(navController = rememberNavController())
     }
 }

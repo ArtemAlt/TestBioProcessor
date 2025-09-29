@@ -16,6 +16,7 @@ import com.example.testbioprocessor.model.camera.CapturedImage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class BioViewModel() : ViewModel() {
@@ -25,8 +26,7 @@ class BioViewModel() : ViewModel() {
     private val _uiLoginState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<RecognitionUiState> = _uiState.asStateFlow()
     val uiLoginState : StateFlow<LoginUiState> = _uiLoginState.asStateFlow()
-    private val app: App = App()
-    private val userPreferences: UserPreferences = UserPreferences(app.getAppContext())
+    private val userPreferences: UserPreferences = UserPreferences(App.instance)
     private val _registrationState = MutableStateFlow<RegistrationUiState>(RegistrationUiState.Idle)
 //    val registrationState: StateFlow<RegistrationUiState> = _registrationState.asStateFlow()
     private val _capturedImages = mutableStateOf<List<CapturedImage>>(emptyList())
@@ -47,10 +47,12 @@ class BioViewModel() : ViewModel() {
     private fun loadSavedLogin() {
         viewModelScope.launch {
             val savedLogin = userPreferences.login
-            _uiLoginState.value = _uiLoginState.value.copy(
-                login = savedLogin.toString(),
-                isLoginSaved = !savedLogin.equals("")
-            )
+            _uiLoginState.update { oldState ->
+                oldState.copy(
+                    login = savedLogin,
+                    isLoginSaved = savedLogin != ""
+                )
+            }
         }
     }
 
@@ -71,12 +73,12 @@ class BioViewModel() : ViewModel() {
     fun registerPerson(name: String, base64Images: List<String>): Boolean {
         viewModelScope.launch {
             _registrationState.value = RegistrationUiState.Loading
-             val result = api.registerPerson(RegisterRequest(name, base64Images))
+             val result = runCatching { api.registerPerson(RegisterRequest(name, base64Images)) }.getOrNull()
 
-            _registrationState.value = if (result.isSuccessful) {
+            _registrationState.value = if (result?.isSuccessful ?: false) {
                 RegistrationUiState.Success(result.body() ?: emptyMap())
             } else {
-                RegistrationUiState.Error(result.message() ?: "Registration failed")
+                RegistrationUiState.Error(result?.message() ?: "Registration failed")
             }
         }
         return when(_registrationState.value) {
@@ -144,7 +146,7 @@ class BioViewModel() : ViewModel() {
         viewModelScope.launch {
             val login = _uiLoginState.value.login.trim()
             if (login.isNotEmpty()) {
-                userPreferences.saveLogin(login)
+                userPreferences.login = login
                 _uiLoginState.value = _uiLoginState.value.copy(
                     isLoginSaved = true,
                     showSuccessMessage = true
@@ -156,7 +158,7 @@ class BioViewModel() : ViewModel() {
 
     fun resetLogin() {
         viewModelScope.launch {
-            userPreferences.clearLogin()
+            userPreferences.login = ""
             _uiLoginState.value = LoginUiState(
                 login = "",
                 isLoginSaved = false,

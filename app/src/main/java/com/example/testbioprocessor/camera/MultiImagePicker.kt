@@ -35,12 +35,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.createImageFile
 import com.example.testbioprocessor.model.camera.CapturedImage
 import com.example.testbioprocessor.model.camera.ImageCaptureState
+import com.example.testbioprocessor.ui.CurrentUserLogin
 import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
 import com.example.testbioprocessor.viewModel.BioViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -276,13 +278,10 @@ fun MultiImagePicker(
             }
         }
 
+        val state by viewModel.uiLoginState.collectAsStateWithLifecycle()
+
         // Информация о пользователе
-        Text(
-            text = "Пользователь: ${viewModel.uiLoginState.value.login}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 16.dp)
-        )
+        CurrentUserLogin(login = state.login)
     }
 }
 

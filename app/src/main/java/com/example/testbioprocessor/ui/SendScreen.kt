@@ -240,13 +240,17 @@ private fun startUploadProcess(
             } else {
                 "Ошибка при отправке фото $currentUser"
             }
-//            onUploadComplete(success, message)
+           onUploadComplete(success, message)
 
         } catch (e: Exception) {
             val errorMessage = "Ошибка: ${e.message}"
-//            onUploadComplete(false, errorMessage)
+           onUploadComplete(false, errorMessage)
         }
     }
+}
+
+private fun onUploadComplete(success: Boolean, message: String) {
+
 }
 
 private fun sendToServer(

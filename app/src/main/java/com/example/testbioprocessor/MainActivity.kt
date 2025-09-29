@@ -44,7 +44,7 @@ fun NavigationApp(navController: NavHostController, model: BioViewModel) {
             LoginScreen(onContinue = {} , model, navController)
         }
         composable("previewScreen") {
-            PreviewScreen(navController = navController)
+            PreviewScreen(navController = navController, model)
         }
         composable("registerScreen") {
             RegisterScreen(navController = navController, model)

@@ -13,6 +13,4 @@ class App : Application() {
         super.onCreate()
         instance = this
     }
-
-    fun getAppContext() = instance.applicationContext
 }

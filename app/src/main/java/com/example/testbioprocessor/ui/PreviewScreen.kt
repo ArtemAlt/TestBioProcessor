@@ -1,5 +1,6 @@
 package com.example.testbioprocessor.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,40 +12,57 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
+import com.example.testbioprocessor.viewModel.BioViewModel
 
 @Composable
-fun PreviewScreen(navController: NavHostController) {
-    Scaffold (modifier = Modifier.fillMaxSize()) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues).fillMaxSize(),
+fun PreviewScreen(
+    navController: NavHostController,
+    viewModel: BioViewModel,
+) {
+    Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize(),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "Поверяем функции")
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "Доступные функции")
             Row {
                 Button(
                     content = { Text("Сдать") },
-                    onClick = {navController.navigate("registerScreen")}
+                    onClick = { navController.navigate("registerScreen") }
                 )
                 Spacer(modifier = Modifier.width(20.dp))
                 Button(
                     content = { Text("Проверить") },
-                    onClick = {navController.navigate("checkScreen")}
+                    onClick = { navController.navigate("checkScreen") }
                 )
             }
+            val state by viewModel.uiLoginState.collectAsStateWithLifecycle()
+
+            CurrentUserLogin(login = state.login)
         }
     }
 }
 
+@SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview2() {
     TestBioProcessorTheme {
-        PreviewScreen(navController = rememberNavController())
+        PreviewScreen(
+            navController = rememberNavController(),
+            viewModel = BioViewModel(),
+        )
     }
 }

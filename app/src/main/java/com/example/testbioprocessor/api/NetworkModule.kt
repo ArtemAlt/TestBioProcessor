@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object NetworkModule {
-    private const val BASE_URL = "http://your-api-url.com"
+    private const val BASE_URL = "http://your-api-url1.com"
 
     private fun provideGson(): Gson {
         return GsonBuilder()

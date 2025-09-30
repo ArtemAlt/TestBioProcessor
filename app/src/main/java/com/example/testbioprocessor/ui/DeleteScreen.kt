@@ -24,7 +24,7 @@ import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
 import com.example.testbioprocessor.viewModel.BioViewModel
 
 @Composable
-fun PreviewScreen(
+fun DeleteScreen(
     navController: NavHostController,
     viewModel: BioViewModel,
 ) {
@@ -36,7 +36,7 @@ fun PreviewScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Доступные функции")
+            Text(text = "Удалить вектор")
             Row {
                 Button(
                     content = { Text("Сдать") },
@@ -57,9 +57,9 @@ fun PreviewScreen(
 @SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview2() {
+fun GreetingPreview22() {
     TestBioProcessorTheme {
-        PreviewScreen(
+        DeleteScreen(
             navController = rememberNavController(),
             viewModel = BioViewModel(),
         )

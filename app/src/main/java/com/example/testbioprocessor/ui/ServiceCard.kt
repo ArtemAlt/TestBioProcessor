@@ -2,7 +2,6 @@ package com.example.testbioprocessor.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,12 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,33 +27,22 @@ import androidx.compose.ui.unit.dp
 fun ServiceCard(
     service: ServiceItem,
     onServiceClick: () -> Unit,
-    onInfoClick: () -> Unit
 ) {
     val borderColor = if (service.isInDevelopment) {
-        MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-    } else {
         MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+    } else {
+        MaterialTheme.colorScheme.primary
     }
 
-    val backgroundColor = if (service.isInDevelopment) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
+    val backgroundColor = MaterialTheme.colorScheme.surface
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = !service.isInDevelopment,
-                onClick = onServiceClick
-            ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (service.isInDevelopment) 2.dp else 4.dp
-        ),
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, borderColor)
+        border = BorderStroke(1.dp, borderColor),
+        onClick = { if (!service.isInDevelopment) onServiceClick() },
     ) {
         Row(
             modifier = Modifier
@@ -76,11 +61,7 @@ fun ServiceCard(
                     modifier = Modifier
                         .size(48.dp)
                         .background(
-                            color = if (service.isInDevelopment) {
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                            } else {
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                            },
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -88,11 +69,7 @@ fun ServiceCard(
                     Icon(
                         imageVector = service.icon,
                         contentDescription = service.title,
-                        tint = if (service.isInDevelopment) {
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        },
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -102,11 +79,7 @@ fun ServiceCard(
                     Text(
                         text = service.title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = if (service.isInDevelopment) {
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        }
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = service.description,
@@ -114,42 +87,6 @@ fun ServiceCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            // Правая часть: иконка информации и статус
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Бейдж "В разработке"
-                if (service.isInDevelopment) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "В разработке",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                // Иконка информации
-                IconButton(
-                    onClick = onInfoClick,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Информация о ${service.title}",
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                     )
                 }
             }

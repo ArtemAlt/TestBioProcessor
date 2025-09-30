@@ -107,7 +107,7 @@ fun LoginScreen(
                 onClick = {
                     viewModel.saveLogin()
                     onContinue(uiState.login.trim())
-                    navController.navigate("previewScreen")
+                    navController.navigate("serviceScreen")
                 },
                 modifier = Modifier
                     .fillMaxWidth()

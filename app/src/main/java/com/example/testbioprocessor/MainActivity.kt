@@ -12,10 +12,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.testbioprocessor.login.LoginScreen
 import com.example.testbioprocessor.ui.CheckScreen
-import com.example.testbioprocessor.ui.PreviewScreen
 import com.example.testbioprocessor.ui.RegisterScreen
 import com.example.testbioprocessor.ui.ResultScreen
-import com.example.testbioprocessor.ui.SendScreen
+//import com.example.testbioprocessor.ui.SendScreen
+import com.example.testbioprocessor.ui.SendScreenNew
+import com.example.testbioprocessor.ui.ServicesScreen
 import com.example.testbioprocessor.ui.StartScreen
 import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
 import com.example.testbioprocessor.viewModel.BioViewModel
@@ -43,9 +44,9 @@ fun NavigationApp(navController: NavHostController, model: BioViewModel) {
         composable("loginScreen") {
             LoginScreen(onContinue = {} , model, navController)
         }
-        composable("previewScreen") {
-            PreviewScreen(navController = navController, model)
-        }
+//        composable("previewScreen") {
+//            PreviewScreen(navController = navController, model)
+//        }
         composable("registerScreen") {
             RegisterScreen(navController = navController, model)
         }
@@ -53,10 +54,13 @@ fun NavigationApp(navController: NavHostController, model: BioViewModel) {
             CheckScreen(navController = navController)
         }
         composable("resultScreen") {
-            ResultScreen(navController = navController)
+            ResultScreen(navController = navController, model)
         }
         composable("sendScreen") {
-            SendScreen(navController = navController, model)
+            SendScreenNew(navController = navController, model)
+        }
+        composable("serviceScreen") {
+            ServicesScreen(navController = navController, model)
         }
     }
 }

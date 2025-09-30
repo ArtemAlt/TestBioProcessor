@@ -49,8 +49,7 @@ fun PreviewScreen(
                 )
             }
             val state by viewModel.uiLoginState.collectAsStateWithLifecycle()
-
-            CurrentUserLogin(login = state.login)
+            CurrentUserLogin(state.login)
         }
     }
 }

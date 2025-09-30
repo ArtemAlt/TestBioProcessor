@@ -24,6 +24,7 @@ retrofitVersion = "2.9.0"
 datastoreCoreAndroid = "1.1.7"
 roomRuntimeAndroid = "2.8.1"
 animationCoreAndroid = "1.7.2"
+foundationAndroid = "1.7.2"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -57,6 +58,7 @@ retrofit-v290 = { module = "com.squareup.retrofit2:retrofit", version.ref = "ret
 androidx-datastore-core-android = { group = "androidx.datastore", name = "datastore-core-android", version.ref = "datastoreCoreAndroid" }
 androidx-room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "roomRuntimeAndroid" }
 androidx-animation-core-android = { group = "androidx.compose.animation", name = "animation-core-android", version.ref = "animationCoreAndroid" }
+androidx-foundation-android = { group = "androidx.compose.foundation", name = "foundation-android", version.ref = "foundationAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

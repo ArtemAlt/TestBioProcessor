@@ -1,5 +1,6 @@
 package com.example.testbioprocessor.api
 
+import com.example.testbioprocessor.model.HealthResponse
 import com.example.testbioprocessor.model.RecognitionRequest
 import com.example.testbioprocessor.model.RecognitionResponse
 import com.example.testbioprocessor.model.RegisterRequest
@@ -11,7 +12,7 @@ import retrofit2.http.POST
 interface BioApi {
     // Health check
     @GET("/health")
-    suspend fun healthCheck(): Response<String>
+    suspend fun healthCheck(): HealthResponse
 
     // Register person
     @POST("/register")

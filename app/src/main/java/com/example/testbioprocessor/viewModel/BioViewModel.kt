@@ -9,6 +9,7 @@ import com.example.testbioprocessor.api.BioApi
 import com.example.testbioprocessor.api.NetworkModule
 import com.example.testbioprocessor.login.LoginUiState
 import com.example.testbioprocessor.login.UserPreferences
+import com.example.testbioprocessor.model.HealthRecognitionStatus
 import com.example.testbioprocessor.model.RecognitionRequest
 import com.example.testbioprocessor.model.RecognitionStatus
 import com.example.testbioprocessor.model.RegisterRequest
@@ -62,10 +63,10 @@ class BioViewModel() : ViewModel() {
             _uiState.value = RecognitionUiState.Loading
             val result = api.healthCheck()
 
-            _uiState.value = if (result.isSuccessful) {
+            _uiState.value = if (result.status == HealthRecognitionStatus.HEALTHY) {
                 RecognitionUiState.HealthCheckSuccess
             } else {
-                RecognitionUiState.Error(result.message() ?: "Unknown error")
+                RecognitionUiState.Error(result.toString())
             }
         }
     }

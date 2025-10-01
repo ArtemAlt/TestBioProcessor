@@ -10,6 +10,7 @@ import com.example.testbioprocessor.api.NetworkModule
 import com.example.testbioprocessor.login.LoginUiState
 import com.example.testbioprocessor.login.UserPreferences
 import com.example.testbioprocessor.model.HealthRecognitionStatus
+import com.example.testbioprocessor.model.HealthResponse
 import com.example.testbioprocessor.model.RecognitionRequest
 import com.example.testbioprocessor.model.RecognitionStatus
 import com.example.testbioprocessor.model.RegisterRequest
@@ -26,10 +27,11 @@ class BioViewModel() : ViewModel() {
     private val _uiState = MutableStateFlow<RecognitionUiState>(RecognitionUiState.Idle)
     private val _uiLoginState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<RecognitionUiState> = _uiState.asStateFlow()
-    val uiLoginState : StateFlow<LoginUiState> = _uiLoginState.asStateFlow()
+    val uiLoginState: StateFlow<LoginUiState> = _uiLoginState.asStateFlow()
     private val userPreferences: UserPreferences = UserPreferences(App.instance)
     private val _registrationState = MutableStateFlow<RegistrationUiState>(RegistrationUiState.Idle)
-//    val registrationState: StateFlow<RegistrationUiState> = _registrationState.asStateFlow()
+
+    //    val registrationState: StateFlow<RegistrationUiState> = _registrationState.asStateFlow()
     private val _capturedImages = mutableStateOf<List<CapturedImage>>(emptyList())
     val capturedImages: State<List<CapturedImage>> get() = _capturedImages
 
@@ -61,8 +63,11 @@ class BioViewModel() : ViewModel() {
     fun checkHealth() {
         viewModelScope.launch {
             _uiState.value = RecognitionUiState.Loading
-            val result = api.healthCheck()
-
+            var result = HealthResponse(HealthRecognitionStatus.NO_HEALTHY)
+            try {
+                result = api.healthCheck()
+            } catch (e: Exception) {
+            }
             _uiState.value = if (result.status == HealthRecognitionStatus.HEALTHY) {
                 RecognitionUiState.HealthCheckSuccess
             } else {
@@ -74,7 +79,8 @@ class BioViewModel() : ViewModel() {
     fun registerPerson(name: String, base64Images: List<String>): Boolean {
         viewModelScope.launch {
             _registrationState.value = RegistrationUiState.Loading
-             val result = runCatching { api.registerPerson(RegisterRequest(name, base64Images)) }.getOrNull()
+            val result =
+                runCatching { api.registerPerson(RegisterRequest(name, base64Images)) }.getOrNull()
 
             _registrationState.value = if (result?.isSuccessful ?: false) {
                 RegistrationUiState.Success(result.body() ?: emptyMap())
@@ -82,7 +88,7 @@ class BioViewModel() : ViewModel() {
                 RegistrationUiState.Error(result?.message() ?: "Registration failed")
             }
         }
-        return when(_registrationState.value) {
+        return when (_registrationState.value) {
             is RegistrationUiState.Success -> true
             else -> false
         }

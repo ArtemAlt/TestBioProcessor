@@ -15,7 +15,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.testbioprocessor.ImagePicker
+import com.example.testbioprocessor.camera.ImagePicker
+import com.example.testbioprocessor.camera.SingleImagePicker
 import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
 import com.example.testbioprocessor.viewModel.BioViewModel
 
@@ -29,7 +30,7 @@ fun RecognitionScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = "Распознование")
-            ImagePicker()
+            SingleImagePicker(navController =navController, viewModel = viewModel)
 
         }
 

@@ -1,4 +1,4 @@
-package com.example.testbioprocessor
+package com.example.testbioprocessor.camera
 
 import android.content.Context
 import android.net.Uri
@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.navigation.NavHostController
+import com.example.testbioprocessor.viewModel.BioViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import java.io.File
@@ -31,7 +33,7 @@ import java.util.Objects
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ImagePicker() {
+fun ImagePicker(navController: NavHostController, viewModel: BioViewModel) {
     val context = LocalContext.current
     var currentPhotoUri by remember { mutableStateOf(value = Uri.EMPTY) }
     val file = context.createImageFile()

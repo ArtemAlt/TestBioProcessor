@@ -10,6 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.testbioprocessor.camera.SingleImagePicker
 import com.example.testbioprocessor.login.LoginScreen
 import com.example.testbioprocessor.ui.CheckScreen
 import com.example.testbioprocessor.ui.DeleteScreen
@@ -66,6 +67,9 @@ fun NavigationApp(navController: NavHostController, model: BioViewModel) {
         }
         composable("recognitionScreen") {
             RecognitionScreen(navController = navController, model)
+        }
+        composable("singleImagePicker") {
+            SingleImagePicker(navController = navController, viewModel = model)
         }
     }
 }

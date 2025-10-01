@@ -11,10 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +30,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.model.camera.CapturedImage
-import com.example.testbioprocessor.model.camera.ImageCaptureState
 import com.example.testbioprocessor.model.camera.SingleImageCaptureState
 import com.example.testbioprocessor.ui.CurrentUserLogin
 import com.example.testbioprocessor.viewModel.BioViewModel
@@ -155,11 +152,6 @@ fun SingleImagePicker(
         ) {
             when {
                 captureState.isLoaded -> {
-                    CircularProgressIndicator()
-                    Text("Отправляем фото на сервер...")
-                }
-
-                captureState.capturedImage != null -> {
                     Button(
                         onClick = {
                             viewModel.recognizePerson(captureState.capturedImage!!.toBase64())
@@ -169,27 +161,17 @@ fun SingleImagePicker(
                     ) {
                         Text("Отправить на сервер")
                     }
-
-                    Button(
-                        onClick = {
-                            // Сброс для новой сессии
-                            captureState = SingleImageCaptureState()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Text("Сделать новые фото")
-                    }
                 }
 
                 else -> {
                     Button(
                         onClick = { cameraPermissionState.launchPermissionRequest()
                         },
-//                        enabled = captureState.currentStep <= 1
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
                     ) {
-                        Text("Сделать фото")
+                        Text("Сделать новые фото")
                     }
                 }
             }

@@ -1,0 +1,89 @@
+name: Build and Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'  # Запускать при создании тегов v1.0.0, v1.2.3 и т.д.
+
+jobs:
+  build-and-release:
+    name: Build APK and Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # Шаг 1: Получить код репозитория
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Шаг 2: Установить JDK 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Шаг 3: Сделать gradlew исполняемым
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # Шаг 4: Собрать Debug APK
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      # Шаг 5: Получить информацию о версии
+      - name: Get version info
+        id: version
+        run: |
+          echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_OUTPUT
+
+      # Шаг 6: Создать Release и загрузить APK
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## 🚀 TestBioProcessor ${{ github.ref_name }}
+            
+            ### 📦 Что нового:
+            - Автоматическая сборка APK
+            - Версия: **${{ github.ref_name }}**
+            - Коммит: ${{ steps.version.outputs.SHORT_SHA }}
+            - Собрано: ${{ steps.version.outputs.DATE }}
+            
+            ### 📱 Установка:
+            1. Скачайте APK файл ниже
+            2. Разрешите установку из неизвестных источников
+            3. Установите приложение
+            
+            ### 🔧 Техническая информация:
+            - Тип сборки: Debug
+            - Подпись: Debug key
+            - Для тестирования
+            
+            ---
+            *Собрано автоматически с GitHub Actions*
+          draft: false
+          prerelease: false
+          files: |
+            app/build/outputs/apk/debug/app-debug.apk
+          asset_name: TestBioProcessor-${{ github.ref_name }}.apk
+
+      # Шаг 7: Уведомление об успехе
+      - name: Success Notification
+        if: success()
+        run: |
+          echo "✅ APK УСПЕШНО СОБРАН И ОПУБЛИКОВАН!"
+          echo "---"
+          echo "📱 Приложение: TestBioProcessor"
+          echo "🏷️ Версия: ${{ github.ref_name }}"
+          echo "🔗 Ссылка для скачивания: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          echo "📅 Собрано: ${{ steps.version.outputs.DATE }}"
+          echo "📦 Файл: TestBioProcessor-${{ github.ref_name }}.apk"
+          echo "---"
+          echo "🎉 Пользователи могут скачать APK из раздела Releases!"

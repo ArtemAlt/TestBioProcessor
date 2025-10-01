@@ -15,6 +15,7 @@ import com.example.testbioprocessor.model.RecognitionRequest
 import com.example.testbioprocessor.model.RecognitionStatus
 import com.example.testbioprocessor.model.RegisterRequest
 import com.example.testbioprocessor.model.camera.CapturedImage
+import com.example.testbioprocessor.model.camera.SingleImageCaptureState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,7 +34,18 @@ class BioViewModel() : ViewModel() {
 
     //    val registrationState: StateFlow<RegistrationUiState> = _registrationState.asStateFlow()
     private val _capturedImages = mutableStateOf<List<CapturedImage>>(emptyList())
+    private val _recognizeImage = MutableStateFlow(SingleImageCaptureState())
+    private val recognizeImage = _recognizeImage.asStateFlow()
     val capturedImages: State<List<CapturedImage>> get() = _capturedImages
+
+
+    fun updateRecognizeImage(image: SingleImageCaptureState) {
+        _recognizeImage.value = image
+    }
+
+
+
+
 
     fun updateCapturedImages(images: List<CapturedImage>) {
         _capturedImages.value = images

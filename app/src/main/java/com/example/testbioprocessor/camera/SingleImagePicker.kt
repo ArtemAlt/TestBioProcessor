@@ -5,13 +5,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,6 +33,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.model.camera.CapturedImage
 import com.example.testbioprocessor.model.camera.ImageCaptureState
+import com.example.testbioprocessor.model.camera.SingleImageCaptureState
 import com.example.testbioprocessor.ui.CurrentUserLogin
 import com.example.testbioprocessor.viewModel.BioViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -50,11 +51,11 @@ fun SingleImagePicker(
 
     // Состояние съемки
     var captureState by remember {
-        mutableStateOf(ImageCaptureState())
+        mutableStateOf(SingleImageCaptureState())
     }
 
-    LaunchedEffect(captureState.capturedImages) {
-        viewModel.updateCapturedImages(captureState.capturedImages)
+    LaunchedEffect(captureState) {
+        viewModel.updateRecognizeImage(captureState)
     }
     // Подготовка URI для следующего фото
     val currentPhotoFile = remember { context.createImageFile() }
@@ -72,26 +73,15 @@ fun SingleImagePicker(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                // Добавляем сделанное фото в список
                 val newImage = CapturedImage(
                     uri = currentPhotoUri,
                     file = currentPhotoFile,
-                    index = captureState.currentStep
+                    index = 1
                 )
-
-                val updatedImages = captureState.capturedImages + newImage
-
-                val maxImages = 1
-                val isCaptureComplete = captureState.currentStep >= maxImages
-
                 captureState = captureState.copy(
-                    capturedImages = updatedImages,
-                    currentStep = captureState.currentStep + 1,
-                    isCaptureInProgress = !isCaptureComplete
+                    capturedImage = newImage,
+                    isLoaded = true
                 )
-
-                // Если достигли нужного количества фото, начинаем загрузку
-                if (isCaptureComplete) { navController.navigate("checkScreen") }
             }
         }
     )
@@ -101,7 +91,7 @@ fun SingleImagePicker(
         permission = Manifest.permission.CAMERA,
         onPermissionResult = { granted ->
             if (granted) {
-                captureState = captureState.copy(isCaptureInProgress = true)
+                captureState = captureState.copy()
                 cameraLauncher.launch(currentPhotoUri)
             }
         }
@@ -133,29 +123,29 @@ fun SingleImagePicker(
         }
 
         // Галерея сделанных фото
-        if (captureState.capturedImages.isNotEmpty()) {
+        if (captureState.capturedImage != null) {
             Text(
                 text = "Сделанные фото:",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            LazyRow(
+            Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
                     .padding(bottom = 16.dp)
             ) {
-                items(captureState.capturedImages) { image ->
-                    AsyncImage(
-                        model = image.uri,
-                        contentDescription = "Фото ${image.index}",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .padding(4.dp)
-                    )
-                }
+
+                AsyncImage(
+                    model = captureState.capturedImage!!.uri,
+                    contentDescription = "Фото для проверки",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .padding(4.dp)
+                )
+
             }
         }
 
@@ -164,17 +154,18 @@ fun SingleImagePicker(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             when {
-                captureState.isUploading -> {
+                captureState.isLoaded -> {
                     CircularProgressIndicator()
                     Text("Отправляем фото на сервер...")
                 }
 
-                captureState.capturedImages.size == 1 -> {
+                captureState.capturedImage != null -> {
                     Button(
                         onClick = {
-                          navController.navigate("checkScreen")
+                            viewModel.recognizePerson(captureState.capturedImage!!.toBase64())
+                            navController.navigate("checkScreen")
                         },
-                        enabled = !captureState.isUploading
+//                        enabled = !captureState.isLoaded
                     ) {
                         Text("Отправить на сервер")
                     }
@@ -182,7 +173,7 @@ fun SingleImagePicker(
                     Button(
                         onClick = {
                             // Сброс для новой сессии
-                            captureState = ImageCaptureState()
+                            captureState = SingleImageCaptureState()
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary
@@ -194,13 +185,9 @@ fun SingleImagePicker(
 
                 else -> {
                     Button(
-                        onClick = {
-                            val maxImages = 1
-                            if (captureState.currentStep <= maxImages) {
-                                cameraPermissionState.launchPermissionRequest()
-                            }
+                        onClick = { cameraPermissionState.launchPermissionRequest()
                         },
-                        enabled = captureState.currentStep <= 1
+//                        enabled = captureState.currentStep <= 1
                     ) {
                         Text("Сделать фото")
                     }

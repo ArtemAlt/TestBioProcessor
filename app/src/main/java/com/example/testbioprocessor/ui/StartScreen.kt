@@ -41,31 +41,43 @@ import com.example.testbioprocessor.viewModel.BioViewModel
 import com.example.testbioprocessor.viewModel.RecognitionUiState
 
 @Composable
-fun StartScreen(navController: NavHostController,
-                model: BioViewModel) {
+fun StartScreen(
+    navController: NavHostController,
+    model: BioViewModel
+) {
     val uiState by model.uiState.collectAsState()
     // Запускаем проверку сервера при первом показе экрана
     LaunchedEffect(Unit) {
         model.checkHealth()
     }
-        Scaffold (modifier = Modifier.fillMaxSize()) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues).fillMaxSize(),
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize(),
             verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally) {
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Spacer(modifier = Modifier.height(128.dp))
-            Text(text = "Приложение разработано для тестрования биопроцессора и несет только ознакомительный функционал." +
+            Text(
+                text = "Приложение разработано для тестрования биопроцессора и несет только ознакомительный функционал." +
                     " Биомтерические образцы не сохраняются",
-                modifier = Modifier.fillMaxWidth().padding(25.dp))
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(25.dp),
+            )
 
             Row {
                 Button(
                     content = { Text("Принять") },
-                    onClick = {navController.navigate("loginScreen")}
+                    onClick = { navController.navigate("loginScreen") }
                 )
                 Spacer(modifier = Modifier.width(20.dp))
                 Button(
                     content = { Text("Отказаться") },
-                    onClick = {System.exit(0)}
+                    onClick = { System.exit(0) }
                 )
             }
             Spacer(modifier = Modifier.height(32.dp))
@@ -93,41 +105,29 @@ fun ServerStatusCompact(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .background(
-                            color = when (uiState) {
-                                is RecognitionUiState.HealthCheckSuccess -> Color.Green
-                                is RecognitionUiState.Error -> Color.Red
-                                is RecognitionUiState.Loading-> Color.Yellow
-                                else -> Color.Gray
-                            },
-                            shape = CircleShape
-                        )
+            Column {
+                Text(
+                    text = "Статус сервера",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.Gray
                 )
 
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Text(
-                        text = "Статус сервера",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.Gray
-                    )
-
-                    Text(
-                        text = when (uiState) {
-                            is RecognitionUiState.Loading -> "Проверка..."
-                            is RecognitionUiState.HealthCheckSuccess-> "Доступен"
-                            is RecognitionUiState.Idle -> "Недоступен"
-                            else -> "Error"
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                Text(
+                    text = when (uiState) {
+                        is RecognitionUiState.Loading -> "Проверка..."
+                        is RecognitionUiState.HealthCheckSuccess -> "Доступен"
+                        is RecognitionUiState.Idle -> "Недоступен"
+                        else -> "Error"
+                    },
+                    color = when (uiState) {
+                        is RecognitionUiState.HealthCheckSuccess -> Color.Green
+                        is RecognitionUiState.Error -> Color.Red
+                        is RecognitionUiState.Loading-> Color.Yellow
+                        else -> Color.Gray
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
             }
 
             // Кнопка повторной проверки (только при ошибке)

@@ -16,6 +16,7 @@ import com.example.testbioprocessor.model.RecognitionStatus
 import com.example.testbioprocessor.model.RegisterRequest
 import com.example.testbioprocessor.model.camera.CapturedImage
 import com.example.testbioprocessor.model.camera.SingleImageCaptureState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -74,16 +75,19 @@ class BioViewModel() : ViewModel() {
 
     fun checkHealth() {
         viewModelScope.launch {
-            _uiState.value = RecognitionUiState.Loading
-            var result = HealthResponse(HealthRecognitionStatus.NO_HEALTHY)
-            try {
-                result = api.healthCheck()
-            } catch (e: Exception) {
+            _uiState.update { RecognitionUiState.Loading }
+            val result = runCatching {
+                delay(2000L)
+                api.healthCheck()
+            }.getOrElse {
+                HealthResponse(HealthRecognitionStatus.NO_HEALTHY)
             }
-            _uiState.value = if (result.status == HealthRecognitionStatus.HEALTHY) {
-                RecognitionUiState.HealthCheckSuccess
-            } else {
-                RecognitionUiState.Error(result.toString())
+            _uiState.update {
+                if (result.status == HealthRecognitionStatus.HEALTHY) {
+                    RecognitionUiState.HealthCheckSuccess
+                } else {
+                    RecognitionUiState.Error(result.toString())
+                }
             }
         }
     }

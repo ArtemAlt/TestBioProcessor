@@ -5,14 +5,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,16 +23,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.model.camera.CapturedImage
 import com.example.testbioprocessor.model.camera.SingleImageCaptureState
-import com.example.testbioprocessor.ui.CurrentUserLogin
 import com.example.testbioprocessor.viewModel.BioViewModel
+import com.example.testbioprocessor.viewModel.RecognitionUiState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import java.util.Objects
@@ -41,8 +41,7 @@ import java.util.Objects
 @Composable
 fun SingleImagePicker(
     viewModel: BioViewModel,
-    navController: NavHostController,
-    onUploadComplete: (Boolean, String?) -> Unit = { _, _ -> } // Колбэк после загрузки
+    onRecognitionComplete: (Boolean) -> Unit = { _ -> } // Колбэк после загрузки
 ) {
     val context = LocalContext.current
 
@@ -51,9 +50,20 @@ fun SingleImagePicker(
         mutableStateOf(SingleImageCaptureState())
     }
 
+    // Следим за состоянием распознавания
+    val recognitionState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Когда распознавание завершено, вызываем колбэк
+    LaunchedEffect(recognitionState) {
+        if (recognitionState is RecognitionUiState.RecognitionSuccess || recognitionState is RecognitionUiState.Error) {
+            onRecognitionComplete(true)
+        }
+    }
+
     LaunchedEffect(captureState) {
         viewModel.updateRecognizeImage(captureState)
     }
+
     // Подготовка URI для следующего фото
     val currentPhotoFile = remember { context.createImageFile() }
     val authority = "${context.packageName}.fileprovider"
@@ -88,7 +98,6 @@ fun SingleImagePicker(
         permission = Manifest.permission.CAMERA,
         onPermissionResult = { granted ->
             if (granted) {
-                captureState = captureState.copy()
                 cameraLauncher.launch(currentPhotoUri)
             }
         }
@@ -101,7 +110,6 @@ fun SingleImagePicker(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-
         // Заголовок с прогрессом
         Text(
             text = "Сделайте свое фото",
@@ -122,64 +130,47 @@ fun SingleImagePicker(
         // Галерея сделанных фото
         if (captureState.capturedImage != null) {
             Text(
-                text = "Сделанные фото:",
+                text = "Ваше фото:",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            AsyncImage(
+                model = captureState.capturedImage!!.uri,
+                contentDescription = "Фото для проверки",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .padding(bottom = 16.dp)
+                    .size(200.dp)
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Кнопка отправки на сервер
+            Button(
+                onClick = {
+                    viewModel.recognizePerson(captureState.capturedImage!!.toBase64())
+                },
+                enabled = captureState.isLoaded
             ) {
-
-                AsyncImage(
-                    model = captureState.capturedImage!!.uri,
-                    contentDescription = "Фото для проверки",
-                    modifier = Modifier
-                        .size(120.dp)
-                        .padding(4.dp)
-                )
-
+                Text("Отправить на распознавание")
+            }
+        } else {
+            // Кнопка сделать фото
+            Button(
+                onClick = {
+                    cameraPermissionState.launchPermissionRequest()
+                }
+            ) {
+                Text("Сделать фото")
             }
         }
 
-        // Кнопки управления
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            when {
-                captureState.isLoaded -> {
-                    Button(
-                        onClick = {
-                            viewModel.recognizePerson(captureState.capturedImage!!.toBase64())
-                            navController.navigate("checkScreen")
-                        },
-//                        enabled = !captureState.isLoaded
-                    ) {
-                        Text("Отправить на сервер")
-                    }
-                }
-
-                else -> {
-                    Button(
-                        onClick = { cameraPermissionState.launchPermissionRequest()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Text("Сделать новые фото")
-                    }
-                }
-            }
+        // Показываем индикатор загрузки
+        if (recognitionState is RecognitionUiState.Loading) {
+            Spacer(modifier = Modifier.height(16.dp))
+            CircularProgressIndicator()
+            Text("Идет распознавание...")
         }
-
-        val state by viewModel.uiLoginState.collectAsStateWithLifecycle()
-
-        // Информация о пользователе
-        CurrentUserLogin(login = state.login)
     }
 }

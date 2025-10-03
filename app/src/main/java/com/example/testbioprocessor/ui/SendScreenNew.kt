@@ -17,14 +17,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,7 +32,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
@@ -51,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,6 +55,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.model.camera.CapturedImage
 import com.example.testbioprocessor.viewModel.BioViewModel
+import com.example.testbioprocessor.viewModel.RegistrationUiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -70,7 +67,7 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
     val captureState by viewModel.capturedImages
     val coroutineScope = rememberCoroutineScope()
     var showUploadDialog by remember { mutableStateOf(false) }
-    var uploadResult by remember { mutableStateOf<Pair<Boolean, String?>?>(null) }
+    var uploadResult by remember { mutableStateOf<Pair<RegistrationUiState, String?>?>(null) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -98,51 +95,6 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-
-            // Карточка с информацией
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp), // Уменьшили padding с 20dp до 16dp
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp) // Уменьшили spacing с 16dp до 12dp
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(60.dp) // Уменьшили с 80dp до 60dp
-                            .background(
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                shape = CircleShape
-                            )
-                    ) {
-                        Text(
-                            text = "${captureState.size}",
-                            style = MaterialTheme.typography.headlineMedium, // Уменьшили с displaySmall до headlineMedium
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Text(
-                        text = "Фото готовы к отправке",
-                        style = MaterialTheme.typography.titleMedium, // Уменьшили с headlineSmall до titleMedium
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Text(
-                        text = "Можно отправлять на сервер",
-                        style = MaterialTheme.typography.bodySmall, // Уменьшили с bodyMedium до bodySmall
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
             // Превью фотографий
             if (captureState.isNotEmpty()) {
                 Card(
@@ -220,30 +172,10 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
                     )
                 }
 
-                // Вторичная кнопка - сделать новые фото
-                OutlinedButton(
-                    onClick = {
-                        viewModel.clearCapturedImages()
-                        navController.navigate("cameraScreen")
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Сделать новые фото")
-                }
-
-                // Третичная кнопка - вернуться
                 TextButton(
                     onClick = {
                         viewModel.clearCapturedImages()
-                        navController.navigate("loginScreen")
+                        navController.navigate("registerScreen")
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -252,7 +184,7 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Вернуться в начало")
+                    Text("Начать заново")
                 }
             }
             val state by viewModel.uiLoginState.collectAsStateWithLifecycle()
@@ -269,7 +201,7 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
             LaunchedEffect(success) {
                 delay(3000) // Показываем 3 секунды
                 uploadResult = null
-                if (success) {
+                if (success is RegistrationUiState.Success) {
                     navController.navigate("loginScreen")
                 }
             }
@@ -282,18 +214,18 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
             ) {
                 Snackbar(
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = if (success) MaterialTheme.colorScheme.primary
+                    containerColor = if (success is RegistrationUiState.Error) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.error,
-                    contentColor = if (success) MaterialTheme.colorScheme.onPrimary
+                    contentColor = if (success is RegistrationUiState.Error) MaterialTheme.colorScheme.onPrimary
                     else MaterialTheme.colorScheme.onError
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = if (success) Icons.Default.Check else Icons.Default.Close,
+                            imageVector = if (success is RegistrationUiState.Error) Icons.Default.Check else Icons.Default.Close,
                             contentDescription = null
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(message ?: if (success) "Успешно отправлено!" else "Ошибка отправки")
+                        Text(message ?: if (success is RegistrationUiState.Success) "Успешно отправлено!" else "Ошибка отправки")
                     }
                 }
             }
@@ -415,17 +347,17 @@ private fun startUploadProcess(
     images: List<CapturedImage>,
     viewModel: BioViewModel,
     coroutineScope: CoroutineScope,
-    onComplete: (Boolean, String?) -> Unit
+    onComplete: (RegistrationUiState, String?) -> Unit
 ) {
     coroutineScope.launch {
         try {
             val currentUser = viewModel.uiLoginState.value.login
-            val success = viewModel.registerPerson(
+            viewModel.registerPerson(
                 currentUser,
                 images.map { it.toBase64() }
             )
-
-            val message = if (success) {
+            val success = viewModel.registrationState.value
+            val message = if (success is RegistrationUiState.Success) {
                 "✅ Фото успешно отправлены на сервер!"
             } else {
                 "❌ Ошибка при отправке фото"
@@ -433,7 +365,7 @@ private fun startUploadProcess(
 
             onComplete(success, message)
         } catch (e: Exception) {
-            onComplete(false, "⚠️ Ошибка: ${e.message}")
+            onComplete(RegistrationUiState.Error("Ошибка регистрации"), "⚠️ Ошибка: ${e.message}")
         }
     }
 }

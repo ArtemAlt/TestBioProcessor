@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class RecognitionResponse(
     @SerializedName("status")
-    val status: RecognitionStatus,
+    var status: RecognitionStatus,
 
     @SerializedName("name")
     val name: String?,

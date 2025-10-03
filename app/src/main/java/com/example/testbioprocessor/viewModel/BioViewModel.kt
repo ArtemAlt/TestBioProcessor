@@ -12,8 +12,11 @@ import com.example.testbioprocessor.login.UserPreferences
 import com.example.testbioprocessor.model.HealthRecognitionStatus
 import com.example.testbioprocessor.model.HealthResponse
 import com.example.testbioprocessor.model.RecognitionRequest
+import com.example.testbioprocessor.model.RecognitionResponse
 import com.example.testbioprocessor.model.RecognitionStatus
 import com.example.testbioprocessor.model.RegisterRequest
+import com.example.testbioprocessor.model.RegisterResponse
+import com.example.testbioprocessor.model.RegisterResponseStatus
 import com.example.testbioprocessor.model.camera.CapturedImage
 import com.example.testbioprocessor.model.camera.SingleImageCaptureState
 import kotlinx.coroutines.delay
@@ -32,21 +35,15 @@ class BioViewModel() : ViewModel() {
     val uiLoginState: StateFlow<LoginUiState> = _uiLoginState.asStateFlow()
     private val userPreferences: UserPreferences = UserPreferences(App.instance)
     private val _registrationState = MutableStateFlow<RegistrationUiState>(RegistrationUiState.Idle)
-
-    //    val registrationState: StateFlow<RegistrationUiState> = _registrationState.asStateFlow()
+    val registrationState: StateFlow<RegistrationUiState> = _registrationState.asStateFlow()
     private val _capturedImages = mutableStateOf<List<CapturedImage>>(emptyList())
     private val _recognizeImage = MutableStateFlow(SingleImageCaptureState())
     private val recognizeImage = _recognizeImage.asStateFlow()
     val capturedImages: State<List<CapturedImage>> get() = _capturedImages
 
-
     fun updateRecognizeImage(image: SingleImageCaptureState) {
         _recognizeImage.value = image
     }
-
-
-
-
 
     fun updateCapturedImages(images: List<CapturedImage>) {
         _capturedImages.value = images
@@ -92,55 +89,56 @@ class BioViewModel() : ViewModel() {
         }
     }
 
-    fun registerPerson(name: String, base64Images: List<String>): Boolean {
+    fun registerPerson(name: String, base64Images: List<String>) {
         viewModelScope.launch {
             _registrationState.value = RegistrationUiState.Loading
             val result =
-                runCatching { api.registerPerson(RegisterRequest(name, base64Images)) }.getOrNull()
+                runCatching { api.registerPerson(RegisterRequest(name, base64Images)) }
+                    .getOrElse { RegisterResponse(RegisterResponseStatus.ERROR, "Ошибка регистрации") }
 
-            _registrationState.value = if (result?.isSuccessful ?: false) {
-                RegistrationUiState.Success(result.body() ?: emptyMap())
+            _registrationState.value = if (result.status.equals(RegisterResponseStatus.SUCCESS)) {
+                RegistrationUiState.Success(result.message)
             } else {
-                RegistrationUiState.Error(result?.message() ?: "Registration failed")
+                RegistrationUiState.Error(result.message)
             }
-        }
-        return when (_registrationState.value) {
-            is RegistrationUiState.Success -> true
-            else -> false
         }
     }
 
     fun recognizePerson(base64Image: String) {
         viewModelScope.launch {
             _uiState.value = RecognitionUiState.Loading
-            val result = api.recognizePerson(RecognitionRequest(base64Image))
+            val result =  runCatching {  api.recognizePerson(RecognitionRequest(base64Image))}
+                .getOrElse {  RecognitionResponse(
+                    status = RecognitionStatus.ERROR,
+                    name = "",
+                    similarity = 0.0f,
+                    error = "error"
+                )}
 
-            _uiState.value = if (result.isSuccessful) {
-                when (result.body()?.status) {
+            _uiState.value =
+                when (result.status) {
                     RecognitionStatus.SUCCESS -> {
                         RecognitionUiState.RecognitionSuccess(
-                            name = result.body()!!.name ?: "Unknown",
-                            similarity = result.body()!!.similarity ?: 0f
+                            name = result.name ?: "Unknown",
+                            similarity = result.similarity ?: 0f
                         )
                     }
 
                     RecognitionStatus.MULTIPLE_FACES -> {
-                        RecognitionUiState.Error("Multiple faces detected")
+                        RecognitionUiState.Error("Множественные лица на фото. Замените фотографию")
                     }
 
                     RecognitionStatus.NO_FACES -> {
-                        RecognitionUiState.Error("No faces detected")
+                        RecognitionUiState.Error("Не определил на фотографии лицо. Замените фотографию")
                     }
 
                     RecognitionStatus.NOT_REGISTERED -> {
-                        RecognitionUiState.Error("Person not registered")
+                        RecognitionUiState.Error("Не узнал Вас")
                     }
 
-                    null -> RecognitionUiState.Error("Unknown status")
+                    else -> RecognitionUiState.Error("Unknown status")
                 }
-            } else {
-                RecognitionUiState.Error(result.message() ?: "Recognition failed")
-            }
+
         }
     }
 
@@ -205,7 +203,7 @@ sealed class RecognitionUiState {
 sealed class RegistrationUiState {
     object Idle : RegistrationUiState()
     object Loading : RegistrationUiState()
-    data class Success(val data: Map<String, Any>) : RegistrationUiState()
+    data class Success(val data: String) : RegistrationUiState()
     data class Error(val message: String) : RegistrationUiState()
 
 }

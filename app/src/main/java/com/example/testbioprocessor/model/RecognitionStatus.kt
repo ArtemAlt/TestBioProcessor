@@ -13,5 +13,8 @@ enum class RecognitionStatus {
     NO_FACES,
 
     @SerializedName("not_registered")
-    NOT_REGISTERED
+    NOT_REGISTERED,
+
+    @SerializedName("error")
+    ERROR,
 }

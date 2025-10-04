@@ -154,6 +154,34 @@ class BioViewModelNew() : ViewModel() {
     fun clearImagesState() {
         _imagesState.value = emptyList()
     }
+
+    fun saveLogin() {
+        viewModelScope.launch {
+            val login = _uiLoginState.value.login.trim()
+            if (login.isNotEmpty()) {
+                userPreferences.getUserState().login = login
+                _uiLoginState.value = _uiLoginState.value.copy(
+                    isLoginSaved = true,
+                )
+            }
+        }
+    }
+
+    fun onLoginChange(it: String) {
+
+    }
+
+    fun resetLogin() {
+        viewModelScope.launch {
+            userPreferences.getUserState().login = ""
+            var v = userPreferences.getUserState().vectorSaved
+            _uiLoginState.value = UserState(
+                login = "",
+                isLoginSaved = false,
+                vectorSaved = v
+            )
+        }
+    }
 }
 
 sealed class ApiUiState {

@@ -1,65 +1,58 @@
 package com.example.testbioprocessor.login
 
-import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Button
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
-import com.example.testbioprocessor.viewModel.BioViewModel
+import com.example.testbioprocessor.viewModel.BioViewModelNew
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onContinue: (String) -> Unit,
-    viewModel: BioViewModel,
+    viewModel: BioViewModelNew,
     navController: NavHostController,
 ) {
     val uiState by viewModel.uiLoginState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Показ сообщений через Snackbar
-    LaunchedEffect(uiState.showSuccessMessage) {
-        if (uiState.showSuccessMessage) {
-            snackbarHostState.showSnackbar("Логин сохранен!")
-            viewModel.clearMessages()
-        }
-    }
+//    // Показ сообщений через Snackbar
+//    LaunchedEffect(uiState) {
+//        if (uiState.showSuccessMessage) {
+//            snackbarHostState.showSnackbar("Логин сохранен!")
+//            viewModel.clearMessages()
+//        }
+//    }
 
-    LaunchedEffect(uiState.showResetMessage) {
-        if (uiState.showResetMessage) {
-            snackbarHostState.showSnackbar("Логин сброшен!")
-            viewModel.clearMessages()
-        }
-    }
+//    LaunchedEffect(uiState.showResetMessage) {
+//        if (uiState.showResetMessage) {
+//            snackbarHostState.showSnackbar("Логин сброшен!")
+//            viewModel.clearMessages()
+//        }
+//    }
 
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
         Column(
@@ -126,17 +119,5 @@ fun LoginScreen(
                 }
             }
         }
-    }
-}
-
-@SuppressLint("ViewModelConstructorInComposable")
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview8() {
-    TestBioProcessorTheme {
-        LoginScreen({},
-            navController = rememberNavController(),
-            viewModel = BioViewModel()
-        )
     }
 }

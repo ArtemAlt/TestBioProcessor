@@ -23,28 +23,27 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.testbioprocessor.camera.SingleImagePicker
 import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
-import com.example.testbioprocessor.viewModel.BioViewModel
-import com.example.testbioprocessor.viewModel.RecognitionUiState
+import com.example.testbioprocessor.viewModel.BioViewModelNew
 
 @Composable
 fun RecognitionScreen(
     navController: NavHostController,
-    viewModel: BioViewModel,
+    viewModel: BioViewModelNew,
 ) {
     val state by viewModel.uiLoginState.collectAsStateWithLifecycle()
     var showDialog by remember { mutableStateOf(false) }
 
     // Следим за состоянием распознавания из ViewModel
-    val recognitionState by viewModel.uiState.collectAsStateWithLifecycle()
+    val recognitionState by viewModel.uiApiState.collectAsStateWithLifecycle()
 
-    // Показываем диалог когда распознавание завершено
-    LaunchedEffect(recognitionState) {
-        if (recognitionState is RecognitionUiState.RecognitionSuccess
-            || recognitionState is RecognitionUiState.Error
-            || recognitionState is RecognitionUiState.Idle){
-            showDialog = true
-        }
-    }
+//    // Показываем диалог когда распознавание завершено
+//    LaunchedEffect(recognitionState) {
+//        if (recognitionState is RecognitionUiState.RecognitionSuccess
+//            || recognitionState is RecognitionUiState.Error
+//            || recognitionState is RecognitionUiState.Idle){
+//            showDialog = true
+//        }
+//    }
 
     Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
         Column(
@@ -61,7 +60,7 @@ fun RecognitionScreen(
             )
 
             SingleImagePicker(
-                viewModel = viewModel,
+                model = viewModel,
                 onRecognitionComplete = {
                     // Эта функция теперь вызывается из SingleImagePicker
                     showDialog = true
@@ -80,17 +79,5 @@ fun RecognitionScreen(
     }
 
     // Информация о пользователе
-    CurrentUserLogin(login = state.login)
-}
-
-@SuppressLint("ViewModelConstructorInComposable")
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview222() {
-    TestBioProcessorTheme {
-        RecognitionScreen(
-            navController = rememberNavController(),
-            viewModel = BioViewModel(),
-        )
-    }
+    CurrentUserLogin(viewModel)
 }

@@ -39,7 +39,9 @@ fun RecognitionScreen(
 
     // Показываем диалог когда распознавание завершено
     LaunchedEffect(recognitionState) {
-        if (recognitionState is RecognitionUiState.RecognitionSuccess || recognitionState is RecognitionUiState.Error){
+        if (recognitionState is RecognitionUiState.RecognitionSuccess
+            || recognitionState is RecognitionUiState.Error
+            || recognitionState is RecognitionUiState.Idle){
             showDialog = true
         }
     }

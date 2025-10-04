@@ -11,27 +11,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.example.testbioprocessor.viewModel.BioViewModel
-import com.example.testbioprocessor.viewModel.RecognitionUiState
+import com.example.testbioprocessor.viewModel.ApiUiState
+import com.example.testbioprocessor.viewModel.BioViewModelNew
 
 @Composable
 fun AlertRecognitionDialog(
-    viewModel: BioViewModel,
+    viewModel: BioViewModelNew,
     navController: NavHostController,
     onDismiss: () -> Unit
 ) {
-    val recognitionState by viewModel.uiState.collectAsStateWithLifecycle()
+    val recognitionState by viewModel.uiApiState.collectAsStateWithLifecycle()
 
     val info = when (recognitionState) {
-        is RecognitionUiState.RecognitionSuccess  -> "Распознал Вас как - " +
-                (recognitionState as RecognitionUiState.RecognitionSuccess).name + " вероятность - " +
-            (recognitionState as RecognitionUiState.RecognitionSuccess).similarity
-        is RecognitionUiState.Error  -> (recognitionState as RecognitionUiState.Error).message
+        is ApiUiState.Success -> "Распознал Вас как - " + (recognitionState as ApiUiState.Success).message
+        is ApiUiState.Error -> (recognitionState as ApiUiState.Error).message
         else -> "Неизвестная ошибка распознавания"
     }
     val title = when (recognitionState) {
-        is RecognitionUiState.RecognitionSuccess  -> "Успех"
-        is RecognitionUiState.Error  -> "Неудача"
+        is ApiUiState.Success -> "Успех"
+        is ApiUiState.Error -> "Неудача"
         else -> "Ошибка"
     }
 

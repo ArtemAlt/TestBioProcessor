@@ -27,12 +27,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.model.camera.CapturedImage
 import com.example.testbioprocessor.model.camera.SingleImageCaptureState
-import com.example.testbioprocessor.viewModel.BioViewModel
-import com.example.testbioprocessor.viewModel.RecognitionUiState
+import com.example.testbioprocessor.viewModel.BioViewModelNew
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import java.util.Objects
@@ -40,7 +38,7 @@ import java.util.Objects
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SingleImagePicker(
-    viewModel: BioViewModel,
+    model: BioViewModelNew,
     onRecognitionComplete: (Boolean) -> Unit = { _ -> } // Колбэк после загрузки
 ) {
     val context = LocalContext.current
@@ -50,18 +48,8 @@ fun SingleImagePicker(
         mutableStateOf(SingleImageCaptureState())
     }
 
-    // Следим за состоянием распознавания
-    val recognitionState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    // Когда распознавание завершено, вызываем колбэк
-    LaunchedEffect(recognitionState) {
-        if (recognitionState is RecognitionUiState.RecognitionSuccess || recognitionState is RecognitionUiState.Error) {
-            onRecognitionComplete(true)
-        }
-    }
-
-    LaunchedEffect(captureState) {
-        viewModel.updateRecognizeImage(captureState)
+    LaunchedEffect(captureState.capturedImage) {
+        model.clearImagesState()
     }
 
     // Подготовка URI для следующего фото
@@ -149,7 +137,7 @@ fun SingleImagePicker(
             // Кнопка отправки на сервер
             Button(
                 onClick = {
-                    viewModel.recognizePerson(captureState.capturedImage!!.toBase64())
+                    model.recognizePerson()
                 },
                 enabled = captureState.isLoaded
             ) {
@@ -166,11 +154,5 @@ fun SingleImagePicker(
             }
         }
 
-        // Показываем индикатор загрузки
-        if (recognitionState is RecognitionUiState.Loading) {
-            Spacer(modifier = Modifier.height(16.dp))
-            CircularProgressIndicator()
-            Text("Идет распознавание...")
-        }
     }
 }

@@ -33,17 +33,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.model.camera.CapturedImage
 import com.example.testbioprocessor.model.camera.ImageCaptureState
 import com.example.testbioprocessor.ui.CurrentUserLogin
-import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
-import com.example.testbioprocessor.viewModel.BioViewModel
+import com.example.testbioprocessor.viewModel.BioViewModelNew
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import java.util.Objects
@@ -51,19 +47,17 @@ import java.util.Objects
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MultiImagePicker(
-    viewModel: BioViewModel,
+    model: BioViewModelNew,
     navController: NavHostController,
     onUploadComplete: (Boolean, String?) -> Unit = { _, _ -> } // Колбэк после загрузки
 ) {
     val context = LocalContext.current
-
-    // Состояние съемки
     var captureState by remember {
         mutableStateOf(ImageCaptureState())
     }
 
     LaunchedEffect(captureState.capturedImages) {
-        viewModel.updateCapturedImages(captureState.capturedImages)
+        model.clearImagesState()
     }
     // Режим съемки: true - многокадровый (5 фото), false - однокадровый (1 фото)
     var isMultiCaptureMode by remember { mutableStateOf(true) }
@@ -103,7 +97,11 @@ fun MultiImagePicker(
                 )
 
                 // Если достигли нужного количества фото, начинаем загрузку
-                if (isCaptureComplete) { navController.navigate("sendScreen") }
+                if (isCaptureComplete) {
+                    model.setImages(captureState.capturedImages)
+                    captureState = ImageCaptureState()
+                    navController.navigate("sendScreen")
+                }
             }
         }
     )
@@ -276,11 +274,8 @@ fun MultiImagePicker(
                 }
             }
         }
-
-        val state by viewModel.uiLoginState.collectAsStateWithLifecycle()
-
         // Информация о пользователе
-        CurrentUserLogin(login = state.login)
+        CurrentUserLogin(model)
     }
 }
 
@@ -290,10 +285,3 @@ private fun getMaxImages(isMultiCaptureMode: Boolean): Int {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview2() {
-    TestBioProcessorTheme {
-        MultiImagePicker(viewModel = BioViewModel(), navController = rememberNavController())
-    }
-}

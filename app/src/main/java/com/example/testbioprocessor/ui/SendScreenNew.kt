@@ -21,8 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,16 +31,13 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,20 +49,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.model.camera.CapturedImage
-import com.example.testbioprocessor.viewModel.BioViewModel
-import com.example.testbioprocessor.viewModel.RegistrationUiState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.example.testbioprocessor.viewModel.BioViewModelNew
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
-    val captureState by viewModel.capturedImages
-    val coroutineScope = rememberCoroutineScope()
+fun SendScreenNew(navController: NavHostController, viewModel: BioViewModelNew) {
+    val captureState by viewModel.imagesState.collectAsStateWithLifecycle()
     var showUploadDialog by remember { mutableStateOf(false) }
-    var uploadResult by remember { mutableStateOf<Pair<RegistrationUiState, String?>?>(null) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -141,15 +130,7 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
                 FilledTonalButton(
                     onClick = {
                         showUploadDialog = true
-                        startUploadProcess(
-                            images = captureState,
-                            viewModel = viewModel,
-                            coroutineScope = coroutineScope,
-                            onComplete = { success, message ->
-                                uploadResult = success to message
-                                showUploadDialog = false
-                            }
-                        )
+                        viewModel.recognizePerson()
                     },
                     enabled = captureState.isNotEmpty(),
                     modifier = Modifier
@@ -174,7 +155,6 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
 
                 TextButton(
                     onClick = {
-                        viewModel.clearCapturedImages()
                         navController.navigate("registerScreen")
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -187,8 +167,7 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
                     Text("Начать заново")
                 }
             }
-            val state by viewModel.uiLoginState.collectAsStateWithLifecycle()
-            CurrentUserLogin(state.login)
+            CurrentUserLogin(viewModel)
         }
 
         // Диалог загрузки
@@ -197,39 +176,7 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModel) {
         }
 
         // Результат загрузки
-        uploadResult?.let { (success, message) ->
-            LaunchedEffect(success) {
-                delay(3000) // Показываем 3 секунды
-                uploadResult = null
-                if (success is RegistrationUiState.Success) {
-                    navController.navigate("loginScreen")
-                }
-            }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                Snackbar(
-                    modifier = Modifier.fillMaxWidth(),
-                    containerColor = if (success is RegistrationUiState.Error) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.error,
-                    contentColor = if (success is RegistrationUiState.Error) MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.onError
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (success is RegistrationUiState.Error) Icons.Default.Check else Icons.Default.Close,
-                            contentDescription = null
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(message ?: if (success is RegistrationUiState.Success) "Успешно отправлено!" else "Ошибка отправки")
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -338,34 +285,6 @@ fun UploadProgressDialog() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        }
-    }
-}
-
-// Обновленная функция загрузки с колбэком
-private fun startUploadProcess(
-    images: List<CapturedImage>,
-    viewModel: BioViewModel,
-    coroutineScope: CoroutineScope,
-    onComplete: (RegistrationUiState, String?) -> Unit
-) {
-    coroutineScope.launch {
-        try {
-            val currentUser = viewModel.uiLoginState.value.login
-            viewModel.registerPerson(
-                currentUser,
-                images.map { it.toBase64() }
-            )
-            val success = viewModel.registrationState.value
-            val message = if (success is RegistrationUiState.Success) {
-                "✅ Фото успешно отправлены на сервер!"
-            } else {
-                "❌ Ошибка при отправке фото"
-            }
-
-            onComplete(success, message)
-        } catch (e: Exception) {
-            onComplete(RegistrationUiState.Error("Ошибка регистрации"), "⚠️ Ошибка: ${e.message}")
         }
     }
 }

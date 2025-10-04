@@ -17,15 +17,14 @@ import com.example.testbioprocessor.ui.DeleteScreen
 import com.example.testbioprocessor.ui.RecognitionScreen
 import com.example.testbioprocessor.ui.RegisterScreen
 import com.example.testbioprocessor.ui.ResultScreen
-//import com.example.testbioprocessor.ui.SendScreen
 import com.example.testbioprocessor.ui.SendScreenNew
 import com.example.testbioprocessor.ui.ServicesScreen
 import com.example.testbioprocessor.ui.StartScreen
 import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
-import com.example.testbioprocessor.viewModel.BioViewModel
+import com.example.testbioprocessor.viewModel.BioViewModelNew
 
 class MainActivity : ComponentActivity() {
-    private val model: BioViewModel by viewModels()
+    private val model: BioViewModelNew by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -39,7 +38,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun NavigationApp(navController: NavHostController, model: BioViewModel) {
+fun NavigationApp(navController: NavHostController, model: BioViewModelNew) {
     NavHost(navController = navController, startDestination = "main") {
         composable("main") {
             StartScreen(navController = navController, model)
@@ -69,7 +68,7 @@ fun NavigationApp(navController: NavHostController, model: BioViewModel) {
             RecognitionScreen(navController = navController, model)
         }
         composable("singleImagePicker") {
-            SingleImagePicker(viewModel = model)
+            SingleImagePicker(model)
         }
     }
 }

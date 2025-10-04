@@ -30,11 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.testbioprocessor.viewModel.BioViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.testbioprocessor.viewModel.BioViewModelNew
 
 @Composable
-fun ServicesScreen(navController: NavHostController, viewModel: BioViewModel) {
+fun ServicesScreen(navController: NavHostController, viewModel: BioViewModelNew) {
     var selectedService by remember { mutableStateOf<ServiceItem?>(null) }
 
     val services = listOf(
@@ -132,10 +131,7 @@ fun ServicesScreen(navController: NavHostController, viewModel: BioViewModel) {
                     }
                 }
             }
-
-            // Информация о пользователе
-            val state by viewModel.uiLoginState.collectAsStateWithLifecycle()
-            CurrentUserLogin(state.login)
+            CurrentUserLogin(viewModel)
         }
     }
 

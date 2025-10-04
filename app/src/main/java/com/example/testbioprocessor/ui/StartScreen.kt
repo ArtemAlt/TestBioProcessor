@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
@@ -26,7 +25,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,18 +32,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.testbioprocessor.model.HealthRecognitionStatus
 import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
-import com.example.testbioprocessor.viewModel.BioViewModel
-import com.example.testbioprocessor.viewModel.RecognitionUiState
+import com.example.testbioprocessor.viewModel.BioViewModelNew
 
 @Composable
 fun StartScreen(
     navController: NavHostController,
-    model: BioViewModel
+    model: BioViewModelNew
 ) {
-    val uiState by model.uiState.collectAsState()
     // Запускаем проверку сервера при первом показе экрана
     LaunchedEffect(Unit) {
         model.checkHealth()
@@ -81,16 +79,17 @@ fun StartScreen(
                 )
             }
             Spacer(modifier = Modifier.height(32.dp))
-            ServerStatusCompact(uiState = uiState, onRetry = { model.retryConnection() })
+            ServerStatusCompact(model)
         }
     }
 }
 
 @Composable
 fun ServerStatusCompact(
-    uiState: RecognitionUiState,
+    model: BioViewModelNew,
     onRetry: () -> Unit = {}
 ) {
+    val uiState by model.uiHealthCheckState.collectAsStateWithLifecycle()
     Card(
         elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -114,16 +113,12 @@ fun ServerStatusCompact(
 
                 Text(
                     text = when (uiState) {
-                        is RecognitionUiState.Loading -> "Проверка..."
-                        is RecognitionUiState.HealthCheckSuccess -> "Доступен"
-                        is RecognitionUiState.Idle -> "Недоступен"
-                        else -> "Error"
+                        HealthRecognitionStatus.HEALTHY -> "Доступен"
+                        HealthRecognitionStatus.NO_HEALTHY -> "Недоступен"
                     },
                     color = when (uiState) {
-                        is RecognitionUiState.HealthCheckSuccess -> Color.Green
-                        is RecognitionUiState.Error -> Color.Red
-                        is RecognitionUiState.Loading-> Color.Yellow
-                        else -> Color.Gray
+                        HealthRecognitionStatus.HEALTHY  -> Color.Green
+                        HealthRecognitionStatus.NO_HEALTHY -> Color.Red
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
@@ -131,7 +126,7 @@ fun ServerStatusCompact(
             }
 
             // Кнопка повторной проверки (только при ошибке)
-            if (uiState is RecognitionUiState.Loading) {
+            if (uiState ==  HealthRecognitionStatus.NO_HEALTHY) {
                 IconButton(
                     onClick = onRetry,
                     modifier = Modifier.padding(36.dp)
@@ -142,7 +137,7 @@ fun ServerStatusCompact(
                         tint = Color.Blue
                     )
                 }
-            } else if (uiState is RecognitionUiState.Error) {
+            } else {
                 CircularProgressIndicator(
                     modifier = Modifier.padding(20.dp),
                     strokeWidth = 2.dp
@@ -159,7 +154,7 @@ fun GreetingPreview() {
     TestBioProcessorTheme {
         StartScreen(
             navController = rememberNavController(),
-            model = BioViewModel()
+            model = BioViewModelNew()
         )
     }
 }

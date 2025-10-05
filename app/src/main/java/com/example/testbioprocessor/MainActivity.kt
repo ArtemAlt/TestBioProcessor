@@ -68,7 +68,7 @@ fun NavigationApp(navController: NavHostController, model: BioViewModelNew) {
             RecognitionScreen(navController = navController, model)
         }
         composable("singleImagePicker") {
-            SingleImagePicker(model)
+            SingleImagePicker(model, navController)
         }
     }
 }

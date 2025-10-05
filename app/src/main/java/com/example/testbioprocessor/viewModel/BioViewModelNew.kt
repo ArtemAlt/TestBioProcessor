@@ -155,7 +155,7 @@ class BioViewModelNew() : ViewModel() {
         _imagesState.value = emptyList()
     }
 
-    fun saveLogin() {
+    fun saveLogin(trim: String) {
         viewModelScope.launch {
             val login = _uiLoginState.value.login.trim()
             if (login.isNotEmpty()) {
@@ -182,6 +182,9 @@ class BioViewModelNew() : ViewModel() {
             )
         }
     }
+
+    fun getSavedLogin() = userPreferences.getLogin()
+
 }
 
 sealed class ApiUiState {

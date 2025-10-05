@@ -1,6 +1,5 @@
 package com.example.testbioprocessor.ui
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,20 +8,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.testbioprocessor.camera.SingleImagePicker
-import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
 import com.example.testbioprocessor.viewModel.BioViewModelNew
 
 @Composable
@@ -64,7 +59,8 @@ fun RecognitionScreen(
                 onRecognitionComplete = {
                     // Эта функция теперь вызывается из SingleImagePicker
                     showDialog = true
-                }
+                },
+                navigation = navController
             )
         }
     }

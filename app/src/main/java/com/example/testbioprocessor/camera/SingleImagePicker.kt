@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.model.camera.CapturedImage
 import com.example.testbioprocessor.model.camera.SingleImageCaptureState
@@ -40,6 +41,7 @@ import java.util.Objects
 @Composable
 fun SingleImagePicker(
     model: BioViewModelNew,
+    navigation: NavHostController,
     onRecognitionComplete: (Boolean) -> Unit = { _ -> } // Колбэк после загрузки
 ) {
     val context = LocalContext.current
@@ -138,7 +140,10 @@ fun SingleImagePicker(
             // Кнопка отправки на сервер
             Button(
                 onClick = {
-                    model.recognizePerson()
+                    if (captureState.capturedImage != null) {
+                        model.setImages(capturedImages = listOf(captureState.capturedImage!!))
+                        navigation.navigate("sendScreen")
+                    }
                 },
                 enabled = captureState.isLoaded
             ) {

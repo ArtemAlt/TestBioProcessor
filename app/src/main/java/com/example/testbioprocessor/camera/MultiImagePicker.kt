@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import android.Manifest
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,6 +43,9 @@ import com.example.testbioprocessor.ui.CurrentUserLogin
 import com.example.testbioprocessor.viewModel.BioViewModelNew
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Objects
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -285,3 +289,13 @@ private fun getMaxImages(isMultiCaptureMode: Boolean): Int {
 }
 
 
+fun Context.createImageFile(): File {
+    // Create an image file name
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+    val imageFileName = "JPEG_" + timeStamp + "_"
+    return File.createTempFile(
+        imageFileName, /* prefix */
+        ".jpg", /* suffix */
+        externalCacheDir /* directory */
+    )
+}

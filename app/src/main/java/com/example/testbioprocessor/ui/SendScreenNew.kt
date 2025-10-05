@@ -1,8 +1,7 @@
 package com.example.testbioprocessor.ui
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,14 +12,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,28 +32,49 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
+import com.example.testbioprocessor.model.SendScreenType
 import com.example.testbioprocessor.model.camera.CapturedImage
+import com.example.testbioprocessor.viewModel.ApiUiState
 import com.example.testbioprocessor.viewModel.BioViewModelNew
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SendScreenNew(navController: NavHostController, viewModel: BioViewModelNew) {
+fun SendScreenNew(
+    navController: NavHostController,
+    viewModel: BioViewModelNew,
+    screenType: SendScreenType = SendScreenType.RECOGNITION
+) {
     val captureState by viewModel.imagesState.collectAsStateWithLifecycle()
+    val apiState by viewModel.uiApiState.collectAsStateWithLifecycle()
     var showUploadDialog by remember { mutableStateOf(false) }
+    var showResultDialog by remember { mutableStateOf<ApiUiState?>(null) }
+
+    // Обработка состояний API для показа диалога результата
+    LaunchedEffect(apiState) {
+        when (apiState) {
+            is ApiUiState.Success,
+            is ApiUiState.RecognitionSuccess,
+            is ApiUiState.RegistrationSuccess,
+            is ApiUiState.Error -> {
+                viewModel.clearImagesState()
+                showResultDialog = apiState
+            }
+            else -> {}
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -64,8 +82,11 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModelNew) 
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Подтверждение отправки",
-                        style = MaterialTheme.typography.headlineSmall
+                        text = when (screenType) {
+                            SendScreenType.REGISTRATION -> "Регистрация биовектора"
+                            SendScreenType.RECOGNITION -> "Распознавание по фото"
+                        },
+                        style = MaterialTheme.typography.titleMedium // Уменьшен на 30%
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -80,208 +101,247 @@ fun SendScreenNew(navController: NavHostController, viewModel: BioViewModelNew) 
                 .padding(paddingValues)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+                .padding(16.dp), // Уменьшен padding на 30%
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp) // Уменьшен spacing на 30%
         ) {
-            // Превью фотографий
-            if (captureState.isNotEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Превью фотографий",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-
-                            Text(
-                                text = "${captureState.size}/5",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        when (captureState.size) {
-                            1 -> SingleImagePreview(capturedImage = captureState.first())
-                            5 -> MultiImagePreview(capturedImages = captureState)
-                            else -> AdaptiveImagePreview(capturedImages = captureState)
-                        }
+            when (apiState) {
+                is ApiUiState.Loading -> {
+                    UploadProgressDialog()
+                }
+                else -> {
+                    if (captureState.isNotEmpty()) {
+                        PhotosPreviewCard(captureState = captureState)
                     }
+
+                    ActionButtons(
+                        navController = navController,
+                        viewModel = viewModel,
+                        captureState = captureState,
+                        screenType = screenType,
+                        isLoading = apiState is ApiUiState.Loading,
+                        onUploadClick = { showUploadDialog = true }
+                    )
                 }
             }
 
-            // Кнопки действий
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Основная кнопка отправки
-                FilledTonalButton(
-                    onClick = {
-                        showUploadDialog = true
-                        viewModel.recognizePerson()
-                    },
-                    enabled = captureState.isNotEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        "Отправить на сервер",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-
-                TextButton(
-                    onClick = {
-                        navController.navigate("registerScreen")
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Начать заново")
-                }
-            }
             CurrentUserLogin(viewModel)
         }
-
-        // Диалог загрузки
-        if (showUploadDialog) {
-            UploadProgressDialog()
-        }
-
-        // Результат загрузки
-
     }
-}
 
-// Красивое превью для одного фото
-@Composable
-fun SingleImagePreview(capturedImage: CapturedImage) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp),
-        shape = MaterialTheme.shapes.large,
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                model = capturedImage.uri,
-                contentDescription = "Фото ${capturedImage.index}",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            // Номер фото
-            Text(
-                text = "Фото ${capturedImage.index}",
-                style = MaterialTheme.typography.labelMedium,
-                color = Color.White,
-                modifier = Modifier
-                    .background(Color.Black.copy(alpha = 0.6f))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                    .align(Alignment.BottomStart)
-            )
-        }
-    }
-}
-
-// Сетка для нескольких фото
-@Composable
-fun MultiImagePreview(capturedImages: List<CapturedImage>) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier.height(200.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(capturedImages) { image ->
-            Card(
-                shape = MaterialTheme.shapes.medium,
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Box(
-                    modifier = Modifier.aspectRatio(1f)
-                ) {
-                    AsyncImage(
-                        model = image.uri,
-                        contentDescription = "Фото ${image.index}",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-
-                    // Номер фото
-                    Text(
-                        text = "${image.index}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
-                        modifier = Modifier
-                            .background(Color.Black.copy(alpha = 0.7f))
-                            .padding(4.dp)
-                            .align(Alignment.TopStart)
-                    )
+    if (showUploadDialog && apiState !is ApiUiState.Loading) {
+        UploadConfirmationDialog(
+            screenType = screenType,
+            onConfirm = {
+                showUploadDialog = false
+                when (screenType) {
+                    SendScreenType.REGISTRATION -> viewModel.registerBioVector()
+                    SendScreenType.RECOGNITION -> viewModel.recognizePerson()
                 }
+            },
+            onCancel = { showUploadDialog = false }
+        )
+    }
+
+    showResultDialog?.let { resultState ->
+        ResultDialog(
+            resultState = resultState,
+            onConfirm = {
+                showResultDialog = null
+                viewModel.resetApiState()
+                navController.navigate("serviceScreen")
+            }
+        )
+    }
+}
+
+@Composable
+fun PhotosPreviewCard(captureState: List<CapturedImage>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp) // Уменьшен elevation
+    ) {
+        Column(
+            modifier = Modifier.padding(4.dp) // Уменьшен padding на 30%
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Превью фотографий",
+                    style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+                )
+                Text(
+                    text = "${captureState.size}/${
+                        when (captureState.size) {
+                            5 -> "5"
+                            else -> "1"
+                        }
+                    }",
+                    style = MaterialTheme.typography.bodySmall, // Уменьшен размер
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp)) // Уменьшен spacing на 30%
+
+            when (captureState.size) {
+                1 -> SingleImagePreview(capturedImage = captureState.first())
+                5 -> MultiImagePreview(capturedImages = captureState)
+                else -> SingleImagePreview(capturedImage = captureState.first())
             }
         }
     }
 }
 
-// Диалог загрузки
+@Composable
+fun ActionButtons(
+    navController: NavHostController,
+    viewModel: BioViewModelNew,
+    captureState: List<CapturedImage>,
+    screenType: SendScreenType,
+    isLoading: Boolean,
+    onUploadClick: () -> Unit
+) {
+    val isEnabled = when (screenType) {
+        SendScreenType.REGISTRATION -> captureState.size == 1 || captureState.size == 5
+        SendScreenType.RECOGNITION -> captureState.size == 1
+    } && !isLoading
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp) // Уменьшен spacing
+    ) {
+        FilledTonalButton(
+            onClick = onUploadClick,
+            enabled = isEnabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp), // Уменьшенная высота
+            colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp), // Уменьшен размер
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp) // Уменьшен размер
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp)) // Уменьшен spacing
+            Text(
+                text = when {
+                    isLoading -> "Отправка..."
+                    screenType == SendScreenType.REGISTRATION -> "Зарегистрировать"
+                    else -> "Распознать"
+                },
+                style = MaterialTheme.typography.bodyLarge // Уменьшен размер
+            )
+        }
+        TextButton(
+            onClick = { navController.popBackStack() },
+            enabled = !isLoading,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp) // Уменьшен размер
+            )
+            Spacer(modifier = Modifier.width(6.dp)) // Уменьшен spacing
+            Text(
+                "Вернуться",
+                style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+            )
+        }
+    }
+}
+
+@Composable
+fun UploadConfirmationDialog(
+    screenType: SendScreenType,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = {
+            Text(
+                text = when (screenType) {
+                    SendScreenType.REGISTRATION -> "Подтверждение регистрации"
+                    SendScreenType.RECOGNITION -> "Подтверждение распознавания"
+                },
+                style = MaterialTheme.typography.bodyLarge // Уменьшен размер
+            )
+        },
+        text = {
+            Text(
+                text = when (screenType) {
+                    SendScreenType.REGISTRATION -> "Вы уверены, что хотите зарегистрировать биовектор?"
+                    SendScreenType.RECOGNITION -> "Вы уверены, что хотите отправить фото для распознавания личности?"
+                },
+                style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = when (screenType) {
+                        SendScreenType.REGISTRATION -> "Зарегистрировать"
+                        SendScreenType.RECOGNITION -> "Распознать"
+                    },
+                    style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) {
+                Text(
+                    "Отмена",
+                    style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+                )
+            }
+        }
+    )
+}
+
 @Composable
 fun UploadProgressDialog() {
-    Dialog(onDismissRequest = { /* Нельзя закрыть */ }) {
+    Dialog(onDismissRequest = {}) {
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.8f)
-                .padding(16.dp),
+                .padding(12.dp), // Уменьшен padding
             shape = MaterialTheme.shapes.extraLarge,
-            elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp) // Уменьшен elevation
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(20.dp), // Уменьшен padding
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp) // Уменьшен spacing
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(36.dp), // Уменьшен размер
                     color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 4.dp
+                    strokeWidth = 3.dp // Уменьшенная толщина
                 )
-
                 Text(
                     text = "Отправка на сервер",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.bodyLarge // Уменьшен размер
                 )
-
                 Text(
                     text = "Пожалуйста, подождите...",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium, // Уменьшен размер
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -289,33 +349,124 @@ fun UploadProgressDialog() {
     }
 }
 
-// Адаптивное превью
 @Composable
-fun AdaptiveImagePreview(capturedImages: List<CapturedImage>) {
-    val columns = when (capturedImages.size) {
-        1 -> 1
-        2 -> 2
-        3 -> 2
-        else -> 2
-    }
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columns),
-        modifier = Modifier.height(150.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(capturedImages) { image ->
-            Card(
-                shape = MaterialTheme.shapes.medium,
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                AsyncImage(
-                    model = image.uri,
-                    contentDescription = "Фото ${image.index}",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.aspectRatio(1f)
+fun ResultDialog(
+    resultState: ApiUiState,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onConfirm,
+        title = {
+            Text(
+                text = when (resultState) {
+                    is ApiUiState.Success -> "Успешно!"
+                    is ApiUiState.RecognitionSuccess -> "Распознавание завершено"
+                    is ApiUiState.RegistrationSuccess -> "Регистрация завершена"
+                    is ApiUiState.Error -> "Ошибка"
+                    else -> "Результат"
+                },
+                style = MaterialTheme.typography.bodyLarge // Уменьшен размер
+            )
+        },
+        text = {
+            Column {
+                when (resultState) {
+                    is ApiUiState.Success -> Text(
+                        resultState.message,
+                        style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+                    )
+                    is ApiUiState.RecognitionSuccess -> {
+                        Text(
+                            "Имя: ${resultState.name}",
+                            style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+                        )
+                        Text(
+                            "Сходство: ${(resultState.similarity * 100).toInt()}%",
+                            style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+                        )
+                    }
+                    is ApiUiState.RegistrationSuccess -> {
+                        Text(
+                            "Пользователь: ${resultState.name}",
+                            style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+                        )
+                        Text(
+                            "Качество: ${(resultState.similarity * 100).toInt()}%",
+                            style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+                        )
+                    }
+                    is ApiUiState.Error -> Text(
+                        resultState.message,
+                        style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+                    )
+                    else -> Text(
+                        "Неизвестный результат",
+                        style = MaterialTheme.typography.bodyMedium // Уменьшен размер
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    "Понятно",
+                    style = MaterialTheme.typography.bodyMedium // Уменьшен размер
                 )
+            }
+        }
+    )
+}
+
+@Composable
+fun SingleImagePreview(capturedImage: CapturedImage) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(3f / 4f),
+        shape = MaterialTheme.shapes.small, // Уменьшен радиус скругления
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp) // Уменьшен elevation
+    ) {
+        Image(
+            bitmap = capturedImage.bitmap.asImageBitmap(),
+            contentDescription = "Сделанное фото",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+
+@Composable
+fun MultiImagePreview(capturedImages: List<CapturedImage>) {
+    val gridItems = capturedImages.chunked(2)
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp) // Уменьшен spacing на 30%
+    ) {
+        gridItems.forEachIndexed { index, rowItems ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp) // Уменьшен spacing на 30%
+            ) {
+                rowItems.forEach { capturedImage ->
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(if (index == 2) 1f else 3f/4f),
+                        shape = MaterialTheme.shapes.extraSmall, // Уменьшен радиус скругления
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp) // Уменьшен elevation
+                    ) {
+                        Image(
+                            bitmap = capturedImage.bitmap.asImageBitmap(),
+                            contentDescription = "Сделанное фото",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+                if (index == 2 && rowItems.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
             }
         }
     }

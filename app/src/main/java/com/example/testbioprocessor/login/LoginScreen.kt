@@ -16,12 +16,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,25 +36,14 @@ fun LoginScreen(
     viewModel: BioViewModelNew,
     navController: NavHostController,
 ) {
-    val uiState by viewModel.uiLoginState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    var localLogin by remember { mutableStateOf("") }
 
-    // Показ сообщений через Snackbar
-    LaunchedEffect(uiState.showSuccessMessage) {
-        if (uiState.showSuccessMessage) {
-            snackbarHostState.showSnackbar("Логин сохранен!")
-            viewModel.clearMessages()
-        }
+    // Загружаем сохраненный логин
+    LaunchedEffect(Unit) {
+        localLogin = viewModel.getSavedLogin()
     }
 
-    LaunchedEffect(uiState.showResetMessage) {
-        if (uiState.showResetMessage) {
-            snackbarHostState.showSnackbar("Логин сброшен!")
-            viewModel.clearMessages()
-        }
-    }
-
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -66,7 +52,6 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Тот же контент что и выше
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = "Логин",
@@ -76,10 +61,12 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Ваш логин -" + uiState.login,
+                text = if (localLogin.isEmpty()) "Пользователь не зарегистрирован"
+                else "Ваш логин - $localLogin",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
@@ -90,9 +77,10 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            OutlinedTextField(value = uiState.login,
-                onValueChange = { viewModel.onLoginChange(it) },
-                label = { Text(text = "Логин") },
+            OutlinedTextField(
+                value = localLogin,
+                onValueChange = { localLogin = it },
+                label = { Text("Логин") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -101,22 +89,29 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    viewModel.saveLogin()
-                    onContinue(uiState.login.trim())
-                    navController.navigate("serviceScreen")
+                    if (localLogin.trim().length >= 3) {
+                        viewModel.saveLogin(localLogin.trim())
+                        onContinue(localLogin.trim())
+                        navController.navigate("serviceScreen")
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = uiState.login.trim().length >= 3
+                enabled = localLogin.trim().length >= 3
             ) {
                 Text("Продолжить")
             }
 
-            if (uiState.isLoginSaved) {
+            // Проверяем есть ли сохраненный логин
+            if (localLogin.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedButton(
-                    onClick = { viewModel.resetLogin() }, modifier = Modifier.fillMaxWidth()
+                    onClick = {
+                        viewModel.resetLogin()
+                        localLogin = ""
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Сбросить логин")
                 }

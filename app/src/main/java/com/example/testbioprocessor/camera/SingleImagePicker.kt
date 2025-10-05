@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +26,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.model.camera.CapturedImage
@@ -142,7 +140,7 @@ fun SingleImagePicker(
                 onClick = {
                     if (captureState.capturedImage != null) {
                         model.setImages(capturedImages = listOf(captureState.capturedImage!!))
-                        navigation.navigate("sendScreen")
+                        navigation.navigate("sendRecognitionScreen")
                     }
                 },
                 enabled = captureState.isLoaded

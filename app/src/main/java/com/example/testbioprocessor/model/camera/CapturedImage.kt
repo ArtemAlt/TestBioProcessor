@@ -11,15 +11,17 @@ import kotlin.math.pow
 data class CapturedImage(
     val uri: Uri,
     val file: File,
-    val index: Int
+    val index: Int,
 ) {
-//    fun toBase64(): String {
-//        return file.inputStream().use { inputStream ->
-//            val bytes = inputStream.readBytes()
-//            Base64.encodeToString(bytes, Base64.NO_WRAP)
-//        }
-//
-//    }
+    val bitmap: Bitmap by lazy { createBitMap() }
+    private fun createBitMap(): Bitmap {
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = 2 // Уменьшаем в 2 раза
+            inPreferredConfig = Bitmap.Config.RGB_565 // Экономим память
+        }
+
+        return BitmapFactory.decodeFile(file.path, options)
+    }
 
     fun toBase64() = compressImage(file)
 
@@ -56,5 +58,7 @@ data class CapturedImage(
         }
     }
 }
+
+
 
 

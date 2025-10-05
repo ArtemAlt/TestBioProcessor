@@ -36,7 +36,7 @@ class BioViewModelNew() : ViewModel() {
     val imagesState = _imagesState.asStateFlow()
     private val _uiHealthCheckState = MutableStateFlow(HealthRecognitionStatus.NO_HEALTHY)
     val uiHealthCheckState = _uiHealthCheckState.asStateFlow()
-    private val _uiApiState = MutableStateFlow<ApiUiState>(ApiUiState.Idle)
+    private var _uiApiState = MutableStateFlow<ApiUiState>(ApiUiState.Idle)
     val uiApiState = _uiApiState.asStateFlow()
 
     init {
@@ -155,20 +155,11 @@ class BioViewModelNew() : ViewModel() {
         _imagesState.value = emptyList()
     }
 
-    fun saveLogin(trim: String) {
+    fun saveLogin(login: String) {
         viewModelScope.launch {
-            val login = _uiLoginState.value.login.trim()
-            if (login.isNotEmpty()) {
-                userPreferences.getUserState().login = login
-                _uiLoginState.value = _uiLoginState.value.copy(
-                    isLoginSaved = true,
-                )
-            }
+            userPreferences.saveLogin(login)
+             _uiLoginState.update { it.copy(login = login, isLoginSaved = true) }
         }
-    }
-
-    fun onLoginChange(it: String) {
-
     }
 
     fun resetLogin() {
@@ -185,6 +176,17 @@ class BioViewModelNew() : ViewModel() {
 
     fun getSavedLogin() = userPreferences.getLogin()
 
+    fun clearMessages() {
+        _uiLoginState.value = _uiLoginState.value.copy(
+            showSuccessMessage = false,
+            showResetMessage = false
+        )
+    }
+
+    fun resetApiState() {
+        _uiApiState.value = ApiUiState.Idle
+    }
+
 }
 
 sealed class ApiUiState {
@@ -192,6 +194,7 @@ sealed class ApiUiState {
     object Loading : ApiUiState()
     data class Success(val message: String) : ApiUiState()
     data class RecognitionSuccess(val name: String, val similarity: Float) : ApiUiState()
+    data class RegistrationSuccess(val name: String, val similarity: Float) : ApiUiState()
     data class Error(val message: String) : ApiUiState()
 }
 

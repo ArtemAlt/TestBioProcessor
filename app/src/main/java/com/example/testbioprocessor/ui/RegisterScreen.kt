@@ -20,7 +20,7 @@ fun RegisterScreen(navController: NavHostController,
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "RegisterScreen")
+            Text(text = "Зарегистрировать свой биовектор")
             MultiImagePicker(navController = navController, model = viewModel)
             CurrentUserLogin(model = viewModel)
         }

@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import android.Manifest
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,7 +29,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +43,7 @@ import com.example.testbioprocessor.ui.CurrentUserLogin
 import com.example.testbioprocessor.viewModel.BioViewModelNew
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.delay
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -53,17 +54,17 @@ import java.util.Objects
 fun MultiImagePicker(
     model: BioViewModelNew,
     navController: NavHostController,
-    onUploadComplete: (Boolean, String?) -> Unit = { _, _ -> } // Колбэк после загрузки
+    onUploadComplete: (Boolean, String?) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
     var captureState by remember {
         mutableStateOf(ImageCaptureState())
     }
 
-    LaunchedEffect(captureState.capturedImages) {
-        model.clearImagesState()
-    }
-    // Режим съемки: true - многокадровый (5 фото), false - однокадровый (1 фото)
+    // Управление навигацией
+    var shouldNavigate by remember { mutableStateOf(false) }
+
+    // Режим съемки
     var isMultiCaptureMode by remember { mutableStateOf(true) }
 
     // Подготовка URI для следующего фото
@@ -90,7 +91,6 @@ fun MultiImagePicker(
                 )
 
                 val updatedImages = captureState.capturedImages + newImage
-
                 val maxImages = if (isMultiCaptureMode) 5 else 1
                 val isCaptureComplete = captureState.currentStep >= maxImages
 
@@ -100,22 +100,32 @@ fun MultiImagePicker(
                     isCaptureInProgress = !isCaptureComplete
                 )
 
-                // Если достигли нужного количества фото, начинаем загрузку
+                // Если достигли нужного количества фото, сохраняем и готовим навигацию
                 if (isCaptureComplete) {
                     model.setImages(captureState.capturedImages)
-                    captureState = ImageCaptureState()
-                    navController.navigate("sendScreen")
+                    shouldNavigate = true // Устанавливаем флаг для навигации
                 }
             }
         }
     )
+
+    // Навигация при завершении съемки
+    LaunchedEffect(shouldNavigate) {
+        if (shouldNavigate) {
+            delay(500) // Небольшая задержка для плавности
+            navController.navigate("sendRegistrationScreen") {
+                // Очищаем back stack чтобы нельзя было вернуться
+                popUpTo("multiImagePicker") { inclusive = true }
+            }
+            shouldNavigate = false
+        }
+    }
 
     // Разрешение камеры
     val cameraPermissionState = rememberPermissionState(
         permission = Manifest.permission.CAMERA,
         onPermissionResult = { granted ->
             if (granted) {
-                captureState = captureState.copy(isCaptureInProgress = true)
                 cameraLauncher.launch(currentPhotoUri)
             }
         }
@@ -147,7 +157,6 @@ fun MultiImagePicker(
                     .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                // Кнопка многокадрового режима
                 TextButton(
                     onClick = { isMultiCaptureMode = true },
                     colors = ButtonDefaults.textButtonColors(
@@ -161,7 +170,6 @@ fun MultiImagePicker(
                     Text("5 фото")
                 }
 
-                // Кнопка однокадрового режима
                 TextButton(
                     onClick = { isMultiCaptureMode = false },
                     colors = ButtonDefaults.textButtonColors(
@@ -180,23 +188,12 @@ fun MultiImagePicker(
         // Заголовок с прогрессом
         Text(
             text = when {
-                captureState.isUploading -> "Загрузка на сервер..."
                 captureState.capturedImages.size == getMaxImages(isMultiCaptureMode) -> "Все фото сделаны!"
                 else -> "Фото ${captureState.currentStep}/${getMaxImages(isMultiCaptureMode)}"
             },
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-
-        // Сообщение о загрузке
-        captureState.uploadMessage?.let { message ->
-            Text(
-                text = message,
-                color = if (message.contains("успешно")) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
 
         // Галерея сделанных фото
         if (captureState.capturedImages.isNotEmpty()) {
@@ -230,19 +227,15 @@ fun MultiImagePicker(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             when {
-                captureState.isUploading -> {
-                    CircularProgressIndicator()
-                    Text("Отправляем фото на сервер...")
-                }
-
                 captureState.capturedImages.size == getMaxImages(isMultiCaptureMode) -> {
                     Button(
                         onClick = {
-                          navController.navigate("sendScreen")
+                            model.setImages(captureState.capturedImages)
+                            shouldNavigate = true
                         },
-                        enabled = !captureState.isUploading
+                        modifier = Modifier.fillMaxWidth(0.8f)
                     ) {
-                        Text("Отправить на сервер")
+                        Text("Перейти к отправке")
                     }
 
                     Button(
@@ -252,7 +245,8 @@ fun MultiImagePicker(
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary
-                        )
+                        ),
+                        modifier = Modifier.fillMaxWidth(0.8f)
                     ) {
                         Text("Сделать новые фото")
                     }
@@ -266,7 +260,8 @@ fun MultiImagePicker(
                                 cameraPermissionState.launchPermissionRequest()
                             }
                         },
-                        enabled = !captureState.isUploading && captureState.currentStep <= getMaxImages(isMultiCaptureMode)
+                        enabled = captureState.currentStep <= getMaxImages(isMultiCaptureMode),
+                        modifier = Modifier.fillMaxWidth(0.8f)
                     ) {
                         Text(
                             when {
@@ -278,7 +273,9 @@ fun MultiImagePicker(
                 }
             }
         }
+
         // Информация о пользователе
+        Spacer(modifier = Modifier.height(32.dp))
         CurrentUserLogin(model)
     }
 }
@@ -287,7 +284,6 @@ fun MultiImagePicker(
 private fun getMaxImages(isMultiCaptureMode: Boolean): Int {
     return if (isMultiCaptureMode) 5 else 1
 }
-
 
 fun Context.createImageFile(): File {
     // Create an image file name

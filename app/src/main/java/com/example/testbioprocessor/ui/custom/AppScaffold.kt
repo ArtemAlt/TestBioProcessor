@@ -8,7 +8,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.navigation.compose.rememberNavController
 import com.example.testbioprocessor.ui.theme.Blue20
 import com.example.testbioprocessor.ui.theme.White
 import com.example.testbioprocessor.viewModel.BioViewModelNew
@@ -19,8 +18,6 @@ fun AppScaffold(
     model: BioViewModelNew,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    val navController = rememberNavController()
-
     Scaffold(
         topBar = {
             AppTopBar()

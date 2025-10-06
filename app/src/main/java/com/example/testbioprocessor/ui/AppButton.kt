@@ -141,10 +141,10 @@ private fun ButtonContent(
         text = if (isLoading) "Загрузка..." else text,
         style = MaterialTheme.typography.bodyLarge.copy(
             fontFamily = AppFonts.customFontFamily,
-            lineHeight = 24.sp
+            lineHeight = 20.sp,
+            fontWeight = FontWeight.Bold
         ),
-        color = contentColor,
-        fontWeight = FontWeight.Normal
+        color = contentColor
     )
 }
 

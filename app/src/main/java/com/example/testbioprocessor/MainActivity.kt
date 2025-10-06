@@ -10,13 +10,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.testbioprocessor.camera.RegisterScreen
 import com.example.testbioprocessor.camera.SingleImagePicker
 import com.example.testbioprocessor.login.LoginScreen
 import com.example.testbioprocessor.model.SendScreenType
 import com.example.testbioprocessor.ui.CheckScreen
 import com.example.testbioprocessor.ui.DeleteScreen
 import com.example.testbioprocessor.ui.RecognitionScreen
-import com.example.testbioprocessor.ui.RegisterScreen
 import com.example.testbioprocessor.ui.ResultScreen
 import com.example.testbioprocessor.ui.SendScreenNew
 import com.example.testbioprocessor.ui.ServicesScreen
@@ -48,7 +48,7 @@ fun NavigationApp(navController: NavHostController, model: BioViewModelNew) {
             LoginScreen(onContinue = {} , model, navController)
         }
         composable("registerScreen") {
-            RegisterScreen(navController = navController, model)
+            RegisterScreen(navController = navController, model = model)
         }
         composable("checkScreen") {
             CheckScreen(navController = navController)

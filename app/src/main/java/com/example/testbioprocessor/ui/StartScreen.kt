@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -58,7 +57,7 @@ fun StartScreen(
         model.checkHealth()
     }
 
-    AppScaffold (
+    AppScaffold(
         showBottomBar = false,
         model
     ) { paddingValues ->
@@ -92,21 +91,30 @@ fun StartScreen(
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontFamily = AppFonts.customFontFamily,
+                    fontWeight = FontWeight.Bold,
                     lineHeight = 24.sp
                 ),
-                color = MaterialTheme.colorScheme.onSurface
+                color = Blue80
             )
 
-
-            Row {
-                Button(
-                    content = { Text("Принять") },
-                    onClick = { navController.navigate("loginScreen") }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
+                AppButton(
+                    text = "Принять",
+                    onClick = {
+                        if (model.uiLoginState.value.isLoginSaved) navController.navigate("serviceScreen")
+                        else navController.navigate("loginScreen" )
+                    },
+                    modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(20.dp))
-                Button(
-                    content = { Text("Отказаться") },
-                    onClick = { System.exit(0) }
+                AppButton(
+                    text = "Отказаться",
+                    onClick = { System.exit(0) },
+                    modifier = Modifier.weight(1f)
                 )
             }
             Spacer(modifier = Modifier.height(32.dp))
@@ -156,7 +164,11 @@ fun ServerStatusCompact(model: BioViewModelNew) {
             Column {
                 Text(
                     text = "Статус сервера",
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontFamily = AppFonts.customFontFamily,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
                     color = Blue80
                 )
 
@@ -169,8 +181,11 @@ fun ServerStatusCompact(model: BioViewModelNew) {
                         HealthRecognitionStatus.HEALTHY -> Color(0xFF4CAF50)
                         HealthRecognitionStatus.NO_HEALTHY -> Color(0xFFF44336)
                     },
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontFamily = AppFonts.customFontFamily,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 )
             }
         }

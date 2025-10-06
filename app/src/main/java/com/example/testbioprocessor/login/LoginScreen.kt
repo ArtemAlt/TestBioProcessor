@@ -25,7 +25,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.testbioprocessor.ui.AppButton
+import com.example.testbioprocessor.ui.AppButtonType
+import com.example.testbioprocessor.ui.AppFonts
 import com.example.testbioprocessor.ui.custom.AppScaffold
 import com.example.testbioprocessor.viewModel.BioViewModelNew
 
@@ -51,26 +55,14 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Логин",
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = if (localLogin.isEmpty()) "Пользователь не зарегистрирован"
-                else "Ваш логин - $localLogin",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "Введите ваш логин",
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFamily = AppFonts.customFontFamily,
+                    lineHeight = 24.sp),
                 fontWeight = FontWeight.Bold
             )
 
@@ -86,7 +78,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
+            AppButton(
                 onClick = {
                     if (localLogin.trim().length >= 3) {
                         viewModel.saveLogin(localLogin.trim())
@@ -97,10 +89,10 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = localLogin.trim().length >= 3
-            ) {
-                Text("Продолжить")
-            }
+                enabled = localLogin.trim().length >= 3,
+                buttonType = AppButtonType.PRIMARY,
+                text = "Продолжить"
+            )
         }
     }
 }

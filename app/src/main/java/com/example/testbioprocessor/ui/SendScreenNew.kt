@@ -47,18 +47,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.testbioprocessor.model.SendScreenType
 import com.example.testbioprocessor.model.camera.CapturedImage
+import com.example.testbioprocessor.ui.custom.AppScaffold
 import com.example.testbioprocessor.viewModel.ApiUiState
 import com.example.testbioprocessor.viewModel.BioViewModelNew
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SendScreenNew(
     navController: NavHostController,
-    viewModel: BioViewModelNew,
+    model: BioViewModelNew,
     screenType: SendScreenType = SendScreenType.RECOGNITION
 ) {
-    val captureState by viewModel.imagesState.collectAsStateWithLifecycle()
-    val apiState by viewModel.uiApiState.collectAsStateWithLifecycle()
+    val captureState by model.imagesState.collectAsStateWithLifecycle()
+    val apiState by model.uiApiState.collectAsStateWithLifecycle()
     var showUploadDialog by remember { mutableStateOf(false) }
     var showResultDialog by remember { mutableStateOf<ApiUiState?>(null) }
 
@@ -69,36 +69,19 @@ fun SendScreenNew(
             is ApiUiState.RecognitionSuccess,
             is ApiUiState.RegistrationSuccess,
             is ApiUiState.Error -> {
-                viewModel.clearImagesState()
+                model.clearImagesState()
                 showResultDialog = apiState
             }
+
             else -> {}
         }
     }
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = when (screenType) {
-                            SendScreenType.REGISTRATION -> "Регистрация биовектора"
-                            SendScreenType.RECOGNITION -> "Распознавание по фото"
-                        },
-                        style = MaterialTheme.typography.titleMedium // Уменьшен на 30%
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
-    ) { paddingValues ->
+    AppScaffold(
+        showBottomBar = false,
+        model
+    ) {
         Column(
             modifier = Modifier
-                .padding(paddingValues)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp), // Уменьшен padding на 30%
@@ -109,6 +92,7 @@ fun SendScreenNew(
                 is ApiUiState.Loading -> {
                     UploadProgressDialog()
                 }
+
                 else -> {
                     if (captureState.isNotEmpty()) {
                         PhotosPreviewCard(captureState = captureState)
@@ -116,7 +100,6 @@ fun SendScreenNew(
 
                     ActionButtons(
                         navController = navController,
-                        viewModel = viewModel,
                         captureState = captureState,
                         screenType = screenType,
                         isLoading = apiState is ApiUiState.Loading,
@@ -124,9 +107,8 @@ fun SendScreenNew(
                     )
                 }
             }
-
-            CurrentUserLogin(viewModel)
         }
+
     }
 
     if (showUploadDialog && apiState !is ApiUiState.Loading) {
@@ -135,8 +117,8 @@ fun SendScreenNew(
             onConfirm = {
                 showUploadDialog = false
                 when (screenType) {
-                    SendScreenType.REGISTRATION -> viewModel.registerBioVector()
-                    SendScreenType.RECOGNITION -> viewModel.recognizePerson()
+                    SendScreenType.REGISTRATION -> model.registerBioVector()
+                    SendScreenType.RECOGNITION -> model.recognizePerson()
                 }
             },
             onCancel = { showUploadDialog = false }
@@ -148,7 +130,7 @@ fun SendScreenNew(
             resultState = resultState,
             onConfirm = {
                 showResultDialog = null
-                viewModel.resetApiState()
+                model.resetApiState()
                 navController.navigate("serviceScreen")
             }
         )
@@ -199,7 +181,6 @@ fun PhotosPreviewCard(captureState: List<CapturedImage>) {
 @Composable
 fun ActionButtons(
     navController: NavHostController,
-    viewModel: BioViewModelNew,
     captureState: List<CapturedImage>,
     screenType: SendScreenType,
     isLoading: Boolean,
@@ -375,6 +356,7 @@ fun ResultDialog(
                         resultState.message,
                         style = MaterialTheme.typography.bodyMedium // Уменьшен размер
                     )
+
                     is ApiUiState.RecognitionSuccess -> {
                         Text(
                             "Имя: ${resultState.name}",
@@ -385,16 +367,19 @@ fun ResultDialog(
                             style = MaterialTheme.typography.bodyMedium // Уменьшен размер
                         )
                     }
+
                     is ApiUiState.RegistrationSuccess -> {
                         Text(
                             "Пользователь: ${resultState.name}",
                             style = MaterialTheme.typography.bodyMedium // Уменьшен размер
                         )
                     }
+
                     is ApiUiState.Error -> Text(
                         resultState.message,
                         style = MaterialTheme.typography.bodyMedium // Уменьшен размер
                     )
+
                     else -> Text(
                         "Неизвестный результат",
                         style = MaterialTheme.typography.bodyMedium // Уменьшен размер
@@ -448,7 +433,7 @@ fun MultiImagePreview(capturedImages: List<CapturedImage>) {
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .aspectRatio(if (index == 2) 1f else 3f/4f),
+                            .aspectRatio(if (index == 2) 1f else 3f / 4f),
                         shape = MaterialTheme.shapes.extraSmall, // Уменьшен радиус скругления
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp) // Уменьшен elevation
                     ) {

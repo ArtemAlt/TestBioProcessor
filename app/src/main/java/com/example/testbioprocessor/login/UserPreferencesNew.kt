@@ -81,4 +81,8 @@ class UserPreferencesNew(context: Context) {
         return getLogin().isNotEmpty() && getLoginStatus()
     }
 
+    fun drop() {
+        sharedPreferences.edit().clear().apply()
+    }
+
 }

@@ -9,6 +9,8 @@ import com.example.testbioprocessor.api.NetworkModule
 import com.example.testbioprocessor.login.UserPreferencesNew
 import com.example.testbioprocessor.login.UserState
 import com.example.testbioprocessor.login.UserVectorState
+import com.example.testbioprocessor.model.DeleteResponse
+import com.example.testbioprocessor.model.DeleteResponseStatus
 import com.example.testbioprocessor.model.HealthRecognitionStatus
 import com.example.testbioprocessor.model.HealthResponse
 import com.example.testbioprocessor.model.RecognitionRequest
@@ -41,6 +43,7 @@ class BioViewModelNew() : ViewModel() {
 
     init {
         loadSavedUser()
+//        userPreferences.drop()
     }
 
     private fun loadSavedUser() {
@@ -68,6 +71,7 @@ class BioViewModelNew() : ViewModel() {
         }
     }
 
+
     fun registerBioVector() {
         val images = _imagesState.value.map { it.toBase64() }
         val name = _uiLoginState.value.login
@@ -92,29 +96,16 @@ class BioViewModelNew() : ViewModel() {
 
     }
 
-    private fun dropUserinfo() {
-        viewModelScope.launch {
-            val savedState = userPreferences.getUserState()
-            _uiLoginState.update { oldState ->
-                oldState.copy(
-                    login = "",
-                    isLoginSaved = false,
-                    vectorSaved = UserVectorState()
-                )
-            }
-        }
-    }
-
-
-
     private fun updateVectorState(isSaved: Boolean) {
         val currentTime =
             SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        val currentUser = _uiLoginState.value.login
         val newVectorState = UserVectorState(
             isSaved = isSaved,
-            data = currentTime
+            data = if (isSaved) currentTime else ""
         )
         val newState = _uiLoginState.value.copy(
+            login = if (isSaved) currentUser else "",
             vectorSaved = newVectorState
         )
         _uiLoginState.value = newState
@@ -130,12 +121,16 @@ class BioViewModelNew() : ViewModel() {
                     RecognitionResponse(
                         status = RecognitionStatus.ERROR,
                         name = "",
-                        similarity = 0.0f,
+                        similarity = "",
                         error = "error"
                     )
                 }
             val currentStatus = when (result.status) {
-                RecognitionStatus.SUCCESS ->  ApiUiState.Success(result.name + result.similarity)
+                RecognitionStatus.SUCCESS -> ApiUiState.RecognitionSuccess(
+                    result.name!!,
+                    result.similarity!!
+                )
+
                 RecognitionStatus.MULTIPLE_FACES -> ApiUiState.Error("Множественные лица на фото. Замените фотографию")
                 RecognitionStatus.NO_FACES -> ApiUiState.Error("Не определил на фотографии лицо. Замените фотографию")
                 RecognitionStatus.NOT_REGISTERED -> ApiUiState.Error("Не узнал Вас")
@@ -158,30 +153,33 @@ class BioViewModelNew() : ViewModel() {
     fun saveLogin(login: String) {
         viewModelScope.launch {
             userPreferences.saveLogin(login)
-             _uiLoginState.update { it.copy(login = login, isLoginSaved = true) }
+            _uiLoginState.update { it.copy(login = login, isLoginSaved = true) }
         }
     }
 
-    fun resetLogin() {
+    fun resetLoginAnVector() {
+        val currentLogin = _uiLoginState.value.login
         viewModelScope.launch {
-            userPreferences.getUserState().login = ""
-            var v = userPreferences.getUserState().vectorSaved
-            _uiLoginState.value = UserState(
-                login = "",
-                isLoginSaved = false,
-                vectorSaved = v
-            )
+            _uiApiState.update { ApiUiState.Loading }
+            val result =
+                runCatching { api.deleteVector(currentLogin) }
+                    .getOrElse {
+                        DeleteResponse(
+                            DeleteResponseStatus.ERROR,
+                            "Ошибка удаления ветора"
+                        )
+                    }
+            if (result.status == DeleteResponseStatus.SUCCESS) {
+                updateVectorState(false)
+                _uiApiState.update { ApiUiState.Success(result.message) }
+            } else {
+                _uiApiState.update { ApiUiState.Error(result.message) }
+            }
         }
     }
 
     fun getSavedLogin() = userPreferences.getLogin()
 
-    fun clearMessages() {
-        _uiLoginState.value = _uiLoginState.value.copy(
-            showSuccessMessage = false,
-            showResetMessage = false
-        )
-    }
 
     fun resetApiState() {
         _uiApiState.value = ApiUiState.Idle
@@ -193,8 +191,8 @@ sealed class ApiUiState {
     object Idle : ApiUiState()
     object Loading : ApiUiState()
     data class Success(val message: String) : ApiUiState()
-    data class RecognitionSuccess(val name: String, val similarity: Float) : ApiUiState()
-    data class RegistrationSuccess(val name: String, val similarity: Float) : ApiUiState()
+    data class RecognitionSuccess(val name: String, val similarity: String) : ApiUiState()
+    data class RegistrationSuccess(val name: String) : ApiUiState()
     data class Error(val message: String) : ApiUiState()
 }
 

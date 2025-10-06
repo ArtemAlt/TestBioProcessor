@@ -1,9 +1,9 @@
 package com.example.testbioprocessor.ui
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,17 +11,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,13 +29,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.testbioprocessor.R
 import com.example.testbioprocessor.model.HealthRecognitionStatus
+import com.example.testbioprocessor.ui.custom.AppScaffold
+import com.example.testbioprocessor.ui.theme.Blue20
+import com.example.testbioprocessor.ui.theme.Blue40
+import com.example.testbioprocessor.ui.theme.Blue80
 import com.example.testbioprocessor.ui.theme.TestBioProcessorTheme
 import com.example.testbioprocessor.viewModel.BioViewModelNew
 
@@ -48,8 +57,10 @@ fun StartScreen(
     LaunchedEffect(Unit) {
         model.checkHealth()
     }
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
+
+    AppScaffold (
+        showBottomBar = false,
+        model
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -58,14 +69,34 @@ fun StartScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(128.dp))
+            Spacer(modifier = Modifier.height(64.dp))
+
+            // Отображение картинки из ресурсов
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Логотип приложения",
+                modifier = Modifier
+                    .size(200.dp)
+                    .padding(16.dp),
+                contentScale = ContentScale.Fit
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
             Text(
-                text = "Приложение разработано для тестрования биопроцессора и несет только ознакомительный функционал." +
-                    " Биомтерические образцы не сохраняются",
+                text = "Приложение разработано \"Студией АГ Квадрат\" исключительно для тестирования биопроцессора.\n" +
+                        "Все операции носят ознакомительный характер. Биометрические данные и образцы не сохраняются " +
+                        "и не передаются третьим лицам.",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(25.dp),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFamily = AppFonts.customFontFamily,
+                    lineHeight = 24.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface
             )
+
 
             Row {
                 Button(
@@ -85,30 +116,48 @@ fun StartScreen(
 }
 
 @Composable
-fun ServerStatusCompact(
-    model: BioViewModelNew,
-    onRetry: () -> Unit = {}
-) {
+fun ServerStatusCompact(model: BioViewModelNew) {
     val uiState by model.uiHealthCheckState.collectAsStateWithLifecycle()
+
     Card(
-        elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Blue20,
+            contentColor = Blue80
+        ),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Blue40),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
         Row(
             modifier = Modifier
-                .padding(12.dp)
+                .padding(16.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Иконка статуса
+            Icon(
+                imageVector = when (uiState) {
+                    HealthRecognitionStatus.HEALTHY -> Icons.Default.CheckCircle
+                    HealthRecognitionStatus.NO_HEALTHY -> Icons.Default.Close
+                },
+                contentDescription = "Статус сервера",
+                tint = when (uiState) {
+                    HealthRecognitionStatus.HEALTHY -> Color(0xFF4CAF50)
+                    HealthRecognitionStatus.NO_HEALTHY -> Color(0xFFF44336)
+                },
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
             Column {
                 Text(
                     text = "Статус сервера",
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color.Gray
+                    color = Blue80
                 )
 
                 Text(
@@ -117,30 +166,11 @@ fun ServerStatusCompact(
                         HealthRecognitionStatus.NO_HEALTHY -> "Недоступен"
                     },
                     color = when (uiState) {
-                        HealthRecognitionStatus.HEALTHY  -> Color.Green
-                        HealthRecognitionStatus.NO_HEALTHY -> Color.Red
+                        HealthRecognitionStatus.HEALTHY -> Color(0xFF4CAF50)
+                        HealthRecognitionStatus.NO_HEALTHY -> Color(0xFFF44336)
                     },
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
-                )
-            }
-
-            // Кнопка повторной проверки (только при ошибке)
-            if (uiState ==  HealthRecognitionStatus.NO_HEALTHY) {
-                IconButton(
-                    onClick = onRetry,
-                    modifier = Modifier.padding(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Повторить",
-                        tint = Color.Blue
-                    )
-                }
-            } else {
-                CircularProgressIndicator(
-                    modifier = Modifier.padding(20.dp),
-                    strokeWidth = 2.dp
                 )
             }
         }

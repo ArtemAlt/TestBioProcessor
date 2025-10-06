@@ -291,7 +291,7 @@ fun Context.createImageFile(): File {
     val imageFileName = "JPEG_" + timeStamp + "_"
     return File.createTempFile(
         imageFileName, /* prefix */
-        ".jpg", /* suffix */
+        ".png", /* suffix */
         externalCacheDir /* directory */
     )
 }

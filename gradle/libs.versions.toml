@@ -25,6 +25,7 @@ datastoreCoreAndroid = "1.1.7"
 roomRuntimeAndroid = "2.8.1"
 animationCoreAndroid = "1.7.2"
 foundationAndroid = "1.7.2"
+media3Decoder = "1.8.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -59,6 +60,7 @@ androidx-datastore-core-android = { group = "androidx.datastore", name = "datast
 androidx-room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "roomRuntimeAndroid" }
 androidx-animation-core-android = { group = "androidx.compose.animation", name = "animation-core-android", version.ref = "animationCoreAndroid" }
 androidx-foundation-android = { group = "androidx.compose.foundation", name = "foundation-android", version.ref = "foundationAndroid" }
+androidx-media3-decoder = { group = "androidx.media3", name = "media3-decoder", version.ref = "media3Decoder" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -44,11 +44,11 @@ data class CapturedImage(
                 ?: throw Exception("Не удалось декодировать изображение")
 
             val outputStream = ByteArrayOutputStream()
-            decodeFile.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+            decodeFile.compress(Bitmap.CompressFormat.PNG, 80, outputStream)
             val byteArray = outputStream.toByteArray()
 
             // Используем NO_WRAP чтобы убрать символы \n
-            Base64.encodeToString(byteArray, Base64.NO_WRAP)
+            String (Base64.encode(byteArray, Base64.NO_WRAP), Charsets.UTF_8)
 
         } catch (e: Exception) {
             println("❌ Ошибка сжатия изображения: ${e.message}")

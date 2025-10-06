@@ -10,7 +10,7 @@ data class RecognitionResponse(
     val name: String?,
 
     @SerializedName("similarity")
-    val similarity: Float?,
+    val similarity: String?,
 
     @SerializedName("error")
     val error: String?

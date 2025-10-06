@@ -363,7 +363,7 @@ fun ResultDialog(
                     is ApiUiState.RecognitionSuccess -> "Распознавание завершено"
                     is ApiUiState.RegistrationSuccess -> "Регистрация завершена"
                     is ApiUiState.Error -> "Ошибка"
-                    else -> "Результат"
+                    else -> "Неизвестная ошбка"
                 },
                 style = MaterialTheme.typography.bodyLarge // Уменьшен размер
             )
@@ -381,17 +381,13 @@ fun ResultDialog(
                             style = MaterialTheme.typography.bodyMedium // Уменьшен размер
                         )
                         Text(
-                            "Сходство: ${(resultState.similarity * 100).toInt()}%",
+                            "Сходство: ${resultState.similarity}",
                             style = MaterialTheme.typography.bodyMedium // Уменьшен размер
                         )
                     }
                     is ApiUiState.RegistrationSuccess -> {
                         Text(
                             "Пользователь: ${resultState.name}",
-                            style = MaterialTheme.typography.bodyMedium // Уменьшен размер
-                        )
-                        Text(
-                            "Качество: ${(resultState.similarity * 100).toInt()}%",
                             style = MaterialTheme.typography.bodyMedium // Уменьшен размер
                         )
                     }

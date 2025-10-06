@@ -3,10 +3,8 @@ package com.example.testbioprocessor.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -53,9 +51,9 @@ fun ServicesScreen(navController: NavHostController, viewModel: BioViewModelNew)
         ),
         ServiceItem(
             id = 3,
-            title = "Удалить биовектор",
+            title = "Сбросить данные",
             icon = Icons.Default.Delete,
-            description = "Удаление сохраненных биометрических данных",
+            description = "Удаление сохраненных данных текущего пользователя",
             destination = "deleteScreen"
         ),
         ServiceItem(
@@ -91,20 +89,10 @@ fun ServicesScreen(navController: NavHostController, viewModel: BioViewModelNew)
                 ) {
                     // Четкий заголовок
                     Text(
-                        text = "Биометрические услуги",
+                        text = "Доступные функции",
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Лаконичный подзаголовок
-                    Text(
-                        text = "Выберите услугу для продолжения",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center
                     )
                 }

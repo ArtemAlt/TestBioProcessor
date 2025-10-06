@@ -13,9 +13,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.testbioprocessor.ui.custom.AppScaffold
 import com.example.testbioprocessor.viewModel.BioViewModelNew
 
 @Composable
@@ -43,7 +42,7 @@ fun LoginScreen(
         localLogin = viewModel.getSavedLogin()
     }
 
-    Scaffold { paddingValues ->
+    AppScaffold(model = viewModel, showBottomBar = true) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -101,20 +100,6 @@ fun LoginScreen(
                 enabled = localLogin.trim().length >= 3
             ) {
                 Text("Продолжить")
-            }
-
-            // Проверяем есть ли сохраненный логин
-            if (localLogin.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedButton(
-                    onClick = {
-                        viewModel.resetLogin()
-                        localLogin = ""
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Сбросить логин")
-                }
             }
         }
     }

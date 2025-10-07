@@ -3,16 +3,22 @@ package com.example.testbioprocessor.camera
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,16 +29,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.testbioprocessor.model.camera.CapturedImage
 import com.example.testbioprocessor.model.camera.SingleImageCaptureState
-import com.example.testbioprocessor.viewModel.BioViewModel
-import com.example.testbioprocessor.viewModel.RecognitionUiState
+import com.example.testbioprocessor.ui.AppButton
+import com.example.testbioprocessor.ui.AppButtonType
+import com.example.testbioprocessor.ui.AppFonts
+import com.example.testbioprocessor.ui.Blue20
+import com.example.testbioprocessor.ui.Blue60
+import com.example.testbioprocessor.ui.Blue80
+import com.example.testbioprocessor.ui.White
+import com.example.testbioprocessor.ui.custom.AppScaffold
+import com.example.testbioprocessor.viewModel.BioViewModelNew
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import java.util.Objects
@@ -40,8 +58,8 @@ import java.util.Objects
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SingleImagePicker(
-    viewModel: BioViewModel,
-    onRecognitionComplete: (Boolean) -> Unit = { _ -> } // Колбэк после загрузки
+    model: BioViewModelNew,
+    navigation: NavHostController,
 ) {
     val context = LocalContext.current
 
@@ -50,18 +68,8 @@ fun SingleImagePicker(
         mutableStateOf(SingleImageCaptureState())
     }
 
-    // Следим за состоянием распознавания
-    val recognitionState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    // Когда распознавание завершено, вызываем колбэк
-    LaunchedEffect(recognitionState) {
-        if (recognitionState is RecognitionUiState.RecognitionSuccess || recognitionState is RecognitionUiState.Error) {
-            onRecognitionComplete(true)
-        }
-    }
-
-    LaunchedEffect(captureState) {
-        viewModel.updateRecognizeImage(captureState)
+    LaunchedEffect(captureState.capturedImage) {
+        model.clearImagesState()
     }
 
     // Подготовка URI для следующего фото
@@ -103,74 +111,136 @@ fun SingleImagePicker(
         }
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Заголовок с прогрессом
-        Text(
-            text = "Сделайте свое фото",
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        // Сообщение о загрузке
-        captureState.uploadMessage?.let { message ->
+    AppScaffold(
+        showBottomBar = true,
+        model = model
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Blue20, White)
+                    )
+                ),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
-                text = message,
-                color = if (message.contains("успешно")) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
-
-        // Галерея сделанных фото
-        if (captureState.capturedImage != null) {
-            Text(
-                text = "Ваше фото:",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            AsyncImage(
-                model = captureState.capturedImage!!.uri,
-                contentDescription = "Фото для проверки",
+                text = "Распознавание личности",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFamily = AppFonts.customFontFamily,
+                    lineHeight = 20.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                color = Blue80,
+                textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .size(200.dp)
-                    .padding(4.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp, horizontal = 16.dp)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Кнопка отправки на сервер
-            Button(
-                onClick = {
-                    viewModel.recognizePerson(captureState.capturedImage!!.toBase64())
-                },
-                enabled = captureState.isLoaded
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text("Отправить на распознавание")
-            }
-        } else {
-            // Кнопка сделать фото
-            Button(
-                onClick = {
-                    cameraPermissionState.launchPermissionRequest()
+                // Заголовок с прогрессом
+                Text(
+                    text = "Сделайте свое фото",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontFamily = AppFonts.customFontFamily,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Blue80,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Сообщение о загрузке
+                captureState.uploadMessage?.let { message ->
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontFamily = AppFonts.customFontFamily
+                        ),
+                        color = if (message.contains("успешно")) Blue60 else Color.Red,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
                 }
-            ) {
-                Text("Сделать фото")
-            }
-        }
 
-        // Показываем индикатор загрузки
-        if (recognitionState is RecognitionUiState.Loading) {
-            Spacer(modifier = Modifier.height(16.dp))
-            CircularProgressIndicator()
-            Text("Идет распознавание...")
+                // Галерея сделанных фото
+                if (captureState.capturedImage != null) {
+                    Text(
+                        text = "Ваше фото:",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontFamily = AppFonts.customFontFamily,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = Blue80,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Card(
+                        elevation = CardDefaults.cardElevation(4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .size(200.dp)
+                            .padding(4.dp)
+                    ) {
+                        AsyncImage(
+                            model = captureState.capturedImage!!.uri,
+                            contentDescription = "Фото для проверки",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Кнопка отправки на сервер
+                    AppButton(
+                        onClick = {
+                            if (captureState.capturedImage != null) {
+                                model.setImages(capturedImages = listOf(captureState.capturedImage!!))
+                                navigation.navigate("sendRecognitionScreen")
+                            }
+                        },
+                        enabled = captureState.isLoaded,
+                        text = "Распознать",
+                        buttonType = AppButtonType.PRIMARY,
+                        icon = Icons.Default.Send,
+                        modifier = Modifier.fillMaxWidth(0.8f)
+                    )
+                } else {
+                    // Кнопка сделать фото
+                    AppButton(
+                        onClick = {
+                            cameraPermissionState.launchPermissionRequest()
+                        },
+                        text = "Сделать фото",
+                        buttonType = AppButtonType.PRIMARY,
+                        icon = Icons.Default.Face,
+                        modifier = Modifier.fillMaxWidth(0.8f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Кнопка возврата назад
+                AppButton(
+                    onClick = {
+                        captureState = SingleImageCaptureState()
+                        navigation.popBackStack()
+                    },
+                    text = "Вернуться назад",
+                    buttonType = AppButtonType.SECONDARY,
+                    icon = Icons.Default.ArrowBack,
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                )
+            }
         }
     }
 }

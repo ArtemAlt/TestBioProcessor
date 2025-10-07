@@ -11,15 +11,17 @@ import kotlin.math.pow
 data class CapturedImage(
     val uri: Uri,
     val file: File,
-    val index: Int
+    val index: Int,
 ) {
-//    fun toBase64(): String {
-//        return file.inputStream().use { inputStream ->
-//            val bytes = inputStream.readBytes()
-//            Base64.encodeToString(bytes, Base64.NO_WRAP)
-//        }
-//
-//    }
+    val bitmap: Bitmap by lazy { createBitMap() }
+    private fun createBitMap(): Bitmap {
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = 2 // Уменьшаем в 2 раза
+            inPreferredConfig = Bitmap.Config.RGB_565 // Экономим память
+        }
+
+        return BitmapFactory.decodeFile(file.path, options)
+    }
 
     fun toBase64() = compressImage(file)
 
@@ -42,11 +44,11 @@ data class CapturedImage(
                 ?: throw Exception("Не удалось декодировать изображение")
 
             val outputStream = ByteArrayOutputStream()
-            decodeFile.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+            decodeFile.compress(Bitmap.CompressFormat.PNG, 80, outputStream)
             val byteArray = outputStream.toByteArray()
 
             // Используем NO_WRAP чтобы убрать символы \n
-            Base64.encodeToString(byteArray, Base64.NO_WRAP)
+            String (Base64.encode(byteArray, Base64.NO_WRAP), Charsets.UTF_8)
 
         } catch (e: Exception) {
             println("❌ Ошибка сжатия изображения: ${e.message}")
@@ -56,5 +58,7 @@ data class CapturedImage(
         }
     }
 }
+
+
 
 

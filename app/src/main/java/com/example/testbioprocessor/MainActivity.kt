@@ -14,10 +14,7 @@ import com.example.testbioprocessor.camera.RegisterScreen
 import com.example.testbioprocessor.camera.SingleImagePicker
 import com.example.testbioprocessor.login.LoginScreen
 import com.example.testbioprocessor.model.SendScreenType
-import com.example.testbioprocessor.ui.CheckScreen
 import com.example.testbioprocessor.ui.DeleteScreen
-import com.example.testbioprocessor.ui.RecognitionScreen
-import com.example.testbioprocessor.ui.ResultScreen
 import com.example.testbioprocessor.ui.SendScreenNew
 import com.example.testbioprocessor.ui.ServicesScreen
 import com.example.testbioprocessor.ui.StartScreen
@@ -50,12 +47,6 @@ fun NavigationApp(navController: NavHostController, model: BioViewModelNew) {
         composable("registerScreen") {
             RegisterScreen(navController = navController, model = model)
         }
-        composable("checkScreen") {
-            CheckScreen(navController = navController)
-        }
-        composable("resultScreen") {
-            ResultScreen(navController = navController, model)
-        }
         composable("sendRegistrationScreen") {
             SendScreenNew(navController = navController, model, SendScreenType.REGISTRATION)
         }
@@ -69,9 +60,6 @@ fun NavigationApp(navController: NavHostController, model: BioViewModelNew) {
             DeleteScreen(navController = navController, model)
         }
         composable("recognitionScreen") {
-            RecognitionScreen(navController = navController, model)
-        }
-        composable("singleImagePicker") {
             SingleImagePicker(model, navController)
         }
     }

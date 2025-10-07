@@ -105,6 +105,7 @@ class BioViewModelNew() : ViewModel() {
             data = if (isSaved) currentTime else ""
         )
         val newState = _uiLoginState.value.copy(
+            isLoginSaved = isSaved,
             login = if (isSaved) currentUser else "",
             vectorSaved = newVectorState
         )
@@ -159,16 +160,24 @@ class BioViewModelNew() : ViewModel() {
 
     fun resetLoginAnVector() {
         val currentLogin = _uiLoginState.value.login
+        val isVector = _uiLoginState.value.vectorSaved.isSaved
         viewModelScope.launch {
             _uiApiState.update { ApiUiState.Loading }
-            val result =
-                runCatching { api.deleteVector(currentLogin) }
-                    .getOrElse {
-                        DeleteResponse(
-                            DeleteResponseStatus.ERROR,
-                            "Ошибка удаления ветора"
-                        )
-                    }
+            var result = DeleteResponse(
+                DeleteResponseStatus.SUCCESS,
+                "Удаление без вектора"
+            )
+            if (isVector) {
+                result =
+                    runCatching { api.deleteVector(currentLogin) }
+                        .getOrElse {
+                            DeleteResponse(
+                                DeleteResponseStatus.ERROR,
+                                "Ошибка удаления ветора"
+                            )
+                        }
+            }
+
             if (result.status == DeleteResponseStatus.SUCCESS) {
                 updateVectorState(false)
                 _uiApiState.update { ApiUiState.Success(result.message) }
@@ -177,9 +186,6 @@ class BioViewModelNew() : ViewModel() {
             }
         }
     }
-
-    fun getSavedLogin() = userPreferences.getLogin()
-
 
     fun resetApiState() {
         _uiApiState.value = ApiUiState.Idle

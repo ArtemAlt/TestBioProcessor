@@ -1,18 +1,27 @@
 package com.example.testbioprocessor.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,14 +30,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.testbioprocessor.ui.custom.AppScaffold
 import com.example.testbioprocessor.viewModel.ApiUiState
 import com.example.testbioprocessor.viewModel.BioViewModelNew
-
 
 @Composable
 fun DeleteScreen(
@@ -41,7 +52,7 @@ fun DeleteScreen(
     LaunchedEffect(apiState) {
         when (apiState) {
             is ApiUiState.Success -> {
-                navController.navigate("loginScreen") {
+                navController.navigate("main") {
                     popUpTo("deleteScreen") { inclusive = true }
                 }
                 viewModel.resetApiState()
@@ -53,147 +64,162 @@ fun DeleteScreen(
         }
     }
 
-
-    AppScaffold (model = viewModel, showBottomBar = true) { paddingValues ->
+    AppScaffold(model = viewModel, showBottomBar = true) { paddingValues ->
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Blue20, White)
+                    )
+                ),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Сбросить данные текущего пользователя\nБудут сброшены логин и биовектор",
-                style = MaterialTheme.typography.bodyLarge,
+                text = "Сброс данных",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFamily = AppFonts.customFontFamily,
+                    lineHeight = 20.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                color = Blue80,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 40.dp)
             )
 
-            Row {
-                AppButton(
-                    onClick = { showConfirmationDialog = true },
-                    text = "Сбросить",
-                    buttonType = AppButtonType.PRIMARY
+            // Основной контент
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(32.dp)
+            ) {
+                // Иконка и заголовок
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(
+                                color = Blue40.copy(alpha = 0.2f),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Удаление",
+                            tint = Blue80,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+
+                    Text(
+                        text = "Сброс данных пользователя",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontFamily = AppFonts.customFontFamily,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Blue80,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                // Описание
+                Text(
+                    text = "Будет удалена вся информация о текущем пользователе:\n\n• Логин\n• Биовектор\n• Все связанные данные",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFamily = AppFonts.customFontFamily
+                    ),
+                    color = Blue80.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center,
+                    lineHeight = 24.sp
                 )
-                Spacer(modifier = Modifier.width(20.dp))
-                AppButton(
-                    onClick = { navController.navigate("serviceScreen") },
-                    text = "Отказаться",
-                    buttonType = AppButtonType.SECONDARY
-                )
+
+                // Кнопки
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    AppButton(
+                        onClick = { showConfirmationDialog = true },
+                        text = "Сбросить данные",
+                        buttonType = AppButtonType.PRIMARY,
+                        icon = Icons.Default.Delete,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    AppButton(
+                        onClick = { navController.popBackStack() },
+                        text = "Вернуться назад",
+                        buttonType = AppButtonType.SECONDARY,
+                        icon = Icons.Default.ArrowBack,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }
-    // Диалог подтверждения сброса
+
     if (showConfirmationDialog) {
-        ResetConfirmationDialog(
-            viewModel = viewModel,
-            navController = navController,
-            onDismiss = { showConfirmationDialog = false }
-        )
-    }
-}
-
-@Composable
-fun ResetConfirmationDialog(
-    viewModel: BioViewModelNew,
-    navController: NavHostController,
-    onDismiss: () -> Unit
-) {
-    val apiState by viewModel.uiApiState.collectAsStateWithLifecycle()
-
-    val info = when (apiState) {
-        is ApiUiState.Success -> "Данные пользователя успешно сброшены"
-        is ApiUiState.Error -> (apiState as ApiUiState.Error).message
-        is ApiUiState.Loading -> "Выполняется сброс данных..."
-        else -> "Подтвердите сброс данных пользователя"
-    }
-
-    val title = when (apiState) {
-        is ApiUiState.Success -> "Успех"
-        is ApiUiState.Error -> "Ошибка"
-        is ApiUiState.Loading -> "Сброс данных"
-        else -> "Подтверждение сброса"
-    }
-
-    MaterialTheme {
-        val openDialog = remember { mutableStateOf(true) }
-
-        if (openDialog.value) {
-            AlertDialog(
-                onDismissRequest = {
-                    openDialog.value = false
-                    onDismiss()
-                },
-                title = {
-                    Text(title)
-                },
-                text = {
-                    Text(info)
-                },
-                confirmButton = {
-                    when (apiState) {
-                        is ApiUiState.Success -> {
-                            Button(
-                                onClick = {
-                                    openDialog.value = false
-                                    viewModel.resetApiState()
-                                    navController.navigate("serviceScreen")
-                                }
-                            ) {
-                                Text("ОК")
-                            }
-                        }
-                        is ApiUiState.Error -> {
-                            Button(
-                                onClick = {
-                                    openDialog.value = false
-                                    viewModel.resetApiState()
-                                    onDismiss()
-                                }
-                            ) {
-                                Text("Закрыть")
-                            }
-                        }
-                        is ApiUiState.Loading -> {
-                            Button(
-                                onClick = { /* Заблокирована во время загрузки */ },
-                                enabled = false
-                            ) {
-                                Row {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(16.dp),
-                                        strokeWidth = 2.dp
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Сброс...")
-                                }
-                            }
-                        }
-                        else -> {
-                            // Состояние по умолчанию - кнопки подтверждения и отмены
-                            Row {
-                                Button(
-                                    onClick = {
-                                        openDialog.value = false
-                                        onDismiss()
-                                    }
-                                ) {
-                                    Text("Отмена")
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Button(
-                                    onClick = {
-                                        viewModel.resetLoginAnVector()
-                                    }
-                                ) {
-                                    Text("Сбросить")
-                                }
-                            }
-                        }
+        AlertDialog(
+            onDismissRequest = { showConfirmationDialog = false },
+            shape = RoundedCornerShape(16.dp),
+            title = {
+                Text(
+                    text = "Подтвердите сброс",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontFamily = AppFonts.customFontFamily,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Blue80
+                )
+            },
+            text = {
+                Text(
+                    text = "Вы уверены, что хотите сбросить все данные пользователя? Это действие нельзя отменить.",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFamily = AppFonts.customFontFamily
+                    ),
+                    color = Blue80
+                )
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = { showConfirmationDialog = false }
+                    ) {
+                        Text(
+                            "Отмена",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontFamily = AppFonts.customFontFamily
+                            ),
+                            color = Blue80
+                        )
                     }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    AppButton(
+                        onClick = {
+                            viewModel.resetLoginAnVector()
+                            showConfirmationDialog = false
+                        },
+                        text = "Сбросить",
+                        buttonType = AppButtonType.PRIMARY,
+                        modifier = Modifier.height(40.dp)
+                    )
                 }
-            )
-        }
+            }
+        )
     }
 }

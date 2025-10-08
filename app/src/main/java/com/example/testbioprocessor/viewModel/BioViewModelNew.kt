@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.testbioprocessor.App
 import com.example.testbioprocessor.api.BioApi
-import com.example.testbioprocessor.api.NetworkModule
 import com.example.testbioprocessor.login.UserPreferencesNew
 import com.example.testbioprocessor.login.UserState
 import com.example.testbioprocessor.login.UserVectorState
@@ -30,7 +29,7 @@ import java.util.Locale
 
 class BioViewModelNew() : ViewModel() {
 
-    private val api: BioApi = NetworkModule.provideRetrofit().create(BioApi::class.java)
+    private val api: BioApi = NetworkModule.createApi(App.instance, BioApi::class.java)
     private val _uiLoginState = MutableStateFlow(UserState())
     val uiLoginState = _uiLoginState.asStateFlow()
     private val userPreferences: UserPreferencesNew = UserPreferencesNew(App.instance)

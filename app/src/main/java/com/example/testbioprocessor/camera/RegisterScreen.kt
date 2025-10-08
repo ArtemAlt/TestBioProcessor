@@ -85,7 +85,7 @@ fun RegisterScreen(
     // Управление навигацией
     var shouldNavigate by remember { mutableStateOf(false) }
 
-    // Режим съемки
+    // Режим съемки - теперь только 1 или 3 фото
     var isMultiCaptureMode by remember { mutableStateOf(true) }
 
     // Подготовка URI для следующего фото
@@ -112,7 +112,7 @@ fun RegisterScreen(
                 )
 
                 val updatedImages = captureState.capturedImages + newImage
-                val maxImages = if (isMultiCaptureMode) 5 else 1
+                val maxImages = if (isMultiCaptureMode) 3 else 1
                 val isCaptureComplete = captureState.currentStep >= maxImages
 
                 captureState = captureState.copy(
@@ -179,14 +179,13 @@ fun RegisterScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 16.dp) // Уменьшил vertical до 16.dp
+                    .padding(vertical = 16.dp, horizontal = 16.dp)
             )
 
-            // Информационный текст - поднял сразу под заголовком
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp), // Увеличил отступ сверху
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 colors = CardDefaults.cardColors(containerColor = Blue20),
                 shape = RoundedCornerShape(12.dp)
@@ -205,7 +204,7 @@ fun RegisterScreen(
                     )
 
                     Text(
-                        text = "• Можно сделать 1 или 5 фото - больше фото повышает качество распознавания\n" +
+                        text = "• Можно сделать 1 или 3 фото - больше фото повышает качество распознавания\n" +
                                 "• Убедитесь в хорошем освещении\n" +
                                 "• Лицо должно полностью попадать в кадр\n" +
                                 "• Избегайте теней на лице",
@@ -226,7 +225,7 @@ fun RegisterScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Переключатель режимов съемки
+                // Переключатель режимов съемки (1 или 3 фото)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -256,7 +255,7 @@ fun RegisterScreen(
                             )
                     ) {
                         Row {
-                            // Кнопка 5 фото
+                            // Кнопка 3 фото
                             Box(
                                 modifier = Modifier
                                     .height(44.dp)
@@ -273,7 +272,7 @@ fun RegisterScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "5 фото",
+                                    text = "3 фото",
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontFamily = AppFonts.customFontFamily,
                                         fontWeight = if (isMultiCaptureMode) FontWeight.Bold else FontWeight.Normal
@@ -431,7 +430,7 @@ fun RegisterScreen(
 }
 // Вспомогательная функция для получения максимального количества фото
 private fun getMaxImages(isMultiCaptureMode: Boolean): Int {
-    return if (isMultiCaptureMode) 5 else 1
+    return if (isMultiCaptureMode) 3 else 1
 }
 
 fun Context.createImageFile(): File {

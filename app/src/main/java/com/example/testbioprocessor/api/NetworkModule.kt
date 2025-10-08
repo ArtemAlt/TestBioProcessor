@@ -58,7 +58,7 @@ object NetworkModule {
 
     private fun createOkHttpClient(context: Context): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = HttpLoggingInterceptor.Level.HEADERS
         }
 
         checkAssetsFiles(context)

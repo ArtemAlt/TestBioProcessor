@@ -1,6 +1,8 @@
 package com.example.testbioprocessor.viewModel
 
+import android.graphics.Bitmap
 import android.icu.text.SimpleDateFormat
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.testbioprocessor.App
@@ -24,6 +26,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import java.io.ByteArrayOutputStream
 import java.util.Date
 import java.util.Locale
 
@@ -94,6 +100,85 @@ class BioViewModelNew() : ViewModel() {
         }
 
     }
+
+    fun registerBioVectorMultipart() {
+        val images = _imagesState.value
+        val name = _uiLoginState.value.login
+
+        viewModelScope.launch {
+            _uiApiState.update { ApiUiState.Loading }
+
+            val result = try {
+                if (images.isEmpty()) {
+                    ApiUiState.Error("Нет фотографий для регистрации")
+                } else {
+                    // Используем multipart загрузку
+                    registerWithMultipart(images, name)
+                }
+            } catch (e: Exception) {
+                ApiUiState.Error("Ошибка регистрации: ${e.message}")
+            }
+
+            _uiApiState.update { result }
+            _imagesState.value = emptyList()
+        }
+    }
+
+    private suspend fun registerWithMultipart(images: List<CapturedImage>, name: String): ApiUiState {
+        // Создаем части для multipart запроса
+        val namePart = createNamePart(name)
+        val imageParts = createImageParts(images)
+
+        // Отправляем multipart запрос
+        val response = api.registerPersonMultipart(namePart, imageParts)
+
+        return if (response.status == RegisterResponseStatus.SUCCESS) {
+            updateVectorState(true)
+            ApiUiState.Success(response.message)
+        } else {
+            ApiUiState.Error(response.message)
+        }
+    }
+
+    // Вспомогательные функции для создания multipart частей
+    private fun createNamePart(name: String): RequestBody {
+        return RequestBody.create("text/plain".toMediaType(), name)
+    }
+
+    private fun createImageParts(images: List<CapturedImage>): List<MultipartBody.Part> {
+        return images.mapIndexed { index, capturedImage ->
+            // Сжимаем изображение
+            val compressedImage = compressImage(capturedImage.bitmap)
+            val requestBody = RequestBody.create("image/jpeg".toMediaType(), compressedImage)
+
+            MultipartBody.Part.createFormData(
+                "images",
+                "photo_${index + 1}.jpg",
+                requestBody
+            )
+        }
+    }
+
+    // Функция сжатия изображения
+    private fun compressImage(bitmap: Bitmap, maxQuality: Int = 80, maxSizeKB: Int = 500): ByteArray {
+        var quality = maxQuality
+        var outputStream = ByteArrayOutputStream()
+
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+        var byteArray = outputStream.toByteArray()
+
+        // Дополнительное сжатие если нужно
+        while (byteArray.size > maxSizeKB * 1024 && quality > 40) {
+            quality -= 10
+            outputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+            byteArray = outputStream.toByteArray()
+        }
+
+        Log.d("ImageCompression", "Final image size: ${byteArray.size / 1024} KB")
+        return byteArray
+    }
+
 
     private fun updateVectorState(isSaved: Boolean) {
         val currentTime =

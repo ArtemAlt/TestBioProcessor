@@ -151,7 +151,7 @@ fun SendScreenNew(
             onConfirm = {
                 showUploadDialog = false
                 when (screenType) {
-                    SendScreenType.REGISTRATION -> model.registerBioVector()
+                    SendScreenType.REGISTRATION -> model.registerBioVectorMultipart()
                     SendScreenType.RECOGNITION -> model.recognizePerson()
                 }
             },

@@ -57,7 +57,7 @@ fun ServicesScreen(navController: NavHostController, model: BioViewModelNew) {
             id = 4,
             title = "Liveness",
             icon = Icons.Default.Favorite,
-            description = "Проверка живого присутствия (в разработке)",
+            description = "Проверка живого присутствия",
             destination = "",
             isInDevelopment = true
         ),
@@ -65,7 +65,7 @@ fun ServicesScreen(navController: NavHostController, model: BioViewModelNew) {
             id = 5,
             title = "Информация",
             icon = Icons.Default.Info,
-            description = "Информация по серверу (в разработке)",
+            description = "Информация по серверу",
             destination = "",
             isInDevelopment = true
         )

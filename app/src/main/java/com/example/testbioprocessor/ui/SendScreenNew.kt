@@ -198,7 +198,7 @@ fun PhotosPreviewCard(captureState: List<CapturedImage>) {
                 Text(
                     text = "${captureState.size}/${
                         when (captureState.size) {
-                            5 -> "5"
+                            3 -> "3"
                             else -> "1"
                         }
                     }",
@@ -213,7 +213,7 @@ fun PhotosPreviewCard(captureState: List<CapturedImage>) {
 
             when (captureState.size) {
                 1 -> SingleImagePreview(capturedImage = captureState.first())
-                5 -> MultiImagePreview(capturedImages = captureState)
+                3 -> MultiImagePreview(capturedImages = captureState)
                 else -> SingleImagePreview(capturedImage = captureState.first())
             }
         }
@@ -230,8 +230,8 @@ fun ActionButtons(
     onBackClick: () -> Unit
 ) {
     val isEnabled = when (screenType) {
-        SendScreenType.REGISTRATION -> captureState.size == 1 || captureState.size == 5
-        SendScreenType.RECOGNITION -> captureState.size == 1
+        SendScreenType.REGISTRATION -> captureState.size == 1 || captureState.size == 3
+        SendScreenType.RECOGNITION -> captureState.size == 1 || captureState.size == 3
     } && !isLoading
 
     Column(
@@ -488,35 +488,25 @@ fun SingleImagePreview(capturedImage: CapturedImage) {
 
 @Composable
 fun MultiImagePreview(capturedImages: List<CapturedImage>) {
-    val gridItems = capturedImages.chunked(2)
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    // Для 3 фото - одна строка с тремя изображениями
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        gridItems.forEachIndexed { index, rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        capturedImages.forEach { capturedImage ->
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(3f / 4f),
+                shape = RoundedCornerShape(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                rowItems.forEach { capturedImage ->
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(if (index == 2) 1f else 3f / 4f),
-                        shape = RoundedCornerShape(8.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Image(
-                            bitmap = capturedImage.bitmap.asImageBitmap(),
-                            contentDescription = "Сделанное фото",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-                }
-                if (index == 2 && rowItems.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
+                Image(
+                    bitmap = capturedImage.bitmap.asImageBitmap(),
+                    contentDescription = "Сделанное фото",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     }

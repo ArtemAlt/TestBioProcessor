@@ -3,7 +3,7 @@ name: Build and Release APK
 on:
   push:
     tags:
-      - 'v*'  # Запускать при создании тегов v1.0.0, v1.2.3 и т.д.
+      - 'v*'
 
 jobs:
   build-and-release:
@@ -22,13 +22,27 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Шаг 3: Сделать gradlew исполняемым
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+      # Шаг 3: 🔐 СОЗДАТЬ СЕРТИФИКАТЫ ИЗ SECRETS
+      - name: Setup certificates from Secrets
+        run: |
+          mkdir -p app/src/main/assets/certs
+          echo "${{ secrets.CLIENT_CRT_BASE64 }}" | base64 --decode > app/src/main/assets/certs/client.crt
+          echo "${{ secrets.CLIENT_KEY_BASE64 }}" | base64 --decode > app/src/main/assets/certs/client.key
+          
+          # Проверим что файлы создались
+          echo "📁 Содержимое папки certs:"
+          ls -la app/src/main/assets/certs/
+          echo "📄 Первые 100 символов сертификата:"
+          head -c 100 app/src/main/assets/certs/client.crt
+          echo ""
+          echo "🔑 Первые 50 символов ключа:"
+          head -c 50 app/src/main/assets/certs/client.key
+          echo ""
 
-      # Шаг 4: Собрать Debug APK
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
+      # Шаг 4: Собрать APK с кастомным BASE_URL
+      - name: Build APK with custom BASE_URL
+        run: |
+          ./gradlew assembleDebug -PbaseUrl="${{ secrets.BASE_URL }}"
 
       # Шаг 5: Получить информацию о версии
       - name: Get version info
@@ -50,21 +64,17 @@ jobs:
           body: |
             ## 🚀 TestBioProcessor ${{ github.ref_name }}
             
-            ### 📦 Что нового:
-            - Автоматическая сборка APK
+            ### 📦 Информация о сборке:
             - Версия: **${{ github.ref_name }}**
+            - API URL: `${{ secrets.BASE_URL }}`
             - Коммит: ${{ steps.version.outputs.SHORT_SHA }}
             - Собрано: ${{ steps.version.outputs.DATE }}
+            - Сертификаты: Загружены из Secrets 🔐
             
             ### 📱 Установка:
             1. Скачайте APK файл ниже
             2. Разрешите установку из неизвестных источников
             3. Установите приложение
-            
-            ### 🔧 Техническая информация:
-            - Тип сборки: Debug
-            - Подпись: Debug key
-            - Для тестирования
             
             ---
             *Собрано автоматически с GitHub Actions*
@@ -73,17 +83,3 @@ jobs:
           files: |
             app/build/outputs/apk/debug/app-debug.apk
           asset_name: TestBioProcessor-${{ github.ref_name }}.apk
-
-      # Шаг 7: Уведомление об успехе
-      - name: Success Notification
-        if: success()
-        run: |
-          echo "✅ APK УСПЕШНО СОБРАН И ОПУБЛИКОВАН!"
-          echo "---"
-          echo "📱 Приложение: TestBioProcessor"
-          echo "🏷️ Версия: ${{ github.ref_name }}"
-          echo "🔗 Ссылка для скачивания: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
-          echo "📅 Собрано: ${{ steps.version.outputs.DATE }}"
-          echo "📦 Файл: TestBioProcessor-${{ github.ref_name }}.apk"
-          echo "---"
-          echo "🎉 Пользователи могут скачать APK из раздела Releases!"

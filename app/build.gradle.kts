@@ -1,4 +1,3 @@
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -17,9 +16,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000\"")
     }
-
+    buildFeatures {
+        buildConfig = true
+    }
     buildTypes {
+        debug {
+            // Можно переопределить BASE_URL для debug если нужно
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -28,6 +33,17 @@ android {
             )
         }
     }
+
+    val baseUrl: String? by project
+
+    if (baseUrl != null) {
+        defaultConfig.buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+        buildTypes.forEach { buildType ->
+            buildType.buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+        }
+        println("✅ BASE_URL установлен из параметров: $baseUrl")
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -37,11 +53,11 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true // Включаем генерацию BuildConfig
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -52,26 +68,23 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.retrofit)
     implementation(libs.androidx.navigation.compose.android)
-    implementation (libs.androidx.navigation.compose)
-    implementation (libs.androidx.lifecycle.viewmodel.compose)
-    implementation (libs.androidx.camera.lifecycle)
-    implementation (libs.androidx.camera.view)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.media3.common.ktx)
-    implementation (libs.retrofit.v290)
-    implementation (libs.converter.gson)
-    implementation (libs.logging.interceptor)
-    implementation (libs.accompanist.permissions)
+    implementation(libs.retrofit.v290)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
+    implementation(libs.accompanist.permissions)
     implementation(libs.coil.compose)
     implementation(libs.androidx.datastore.core.android)
-    implementation (libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime.android)
-    implementation(libs.androidx.animation.core.android)
     implementation(libs.androidx.animation.core.android)
     implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.media3.decoder)
-    implementation(libs.androidx.foundation.android)
-    implementation(libs.androidx.foundation.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

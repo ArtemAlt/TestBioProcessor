@@ -97,9 +97,9 @@ object NetworkModule {
             Log.d(TAG, "mTLS client created successfully")
 
             return OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
                 .sslSocketFactory(sslContext.socketFactory, trustManager)
                 .hostnameVerifier { _, _ -> true }
                 .build()

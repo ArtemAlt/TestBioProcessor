@@ -159,26 +159,25 @@ class BioViewModelNew() : ViewModel() {
         }
     }
 
-    // Функция сжатия изображения
-    private fun compressImage(bitmap: Bitmap, maxQuality: Int = 80, maxSizeKB: Int = 500): ByteArray {
+    private fun compressImage(bitmap: Bitmap, maxQuality: Int = 60, maxSizeKB: Int = 200): ByteArray {
         var quality = maxQuality
         var outputStream = ByteArrayOutputStream()
 
         bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
         var byteArray = outputStream.toByteArray()
 
-        // Дополнительное сжатие если нужно
-        while (byteArray.size > maxSizeKB * 1024 && quality > 40) {
-            quality -= 10
+        // Агрессивное сжатие для 3 фото
+        while (byteArray.size > maxSizeKB * 1024 && quality > 20) {
+            quality -= 15
             outputStream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
             byteArray = outputStream.toByteArray()
+            Log.d("ImageCompression", "Compressing: quality=$quality%, size=${byteArray.size / 1024}KB")
         }
 
-        Log.d("ImageCompression", "Final image size: ${byteArray.size / 1024} KB")
+        Log.d("ImageCompression", "Final: ${byteArray.size / 1024}KB, quality: $quality%")
         return byteArray
     }
-
 
     private fun updateVectorState(isSaved: Boolean) {
         val currentTime =

@@ -35,7 +35,16 @@ jobs:
         run: |
           ./gradlew assembleDebug -PbaseUrl="${{ secrets.BASE_URL }}"
 
-      # Шаг 5: Получить информацию о версии и безопасно показать BASE_URL
+      # Шаг 5: Проверить что APK создался
+      - name: Check APK exists
+        run: |
+          echo "📁 Проверяем созданные APK файлы:"
+          ls -la app/build/outputs/apk/debug/
+          echo "---"
+          echo "📁 Проверяем все APK файлы:"
+          find app/build/outputs/apk/ -name "*.apk" -type f
+
+      # Шаг 6: Получить информацию о версии и безопасно показать BASE_URL
       - name: Get version info
         id: version
         run: |
@@ -52,7 +61,18 @@ jobs:
             echo "BASE_URL_PREVIEW=not_set" >> $GITHUB_OUTPUT
           fi
 
-      # Шаг 6: Создать Release и загрузить APK
+      # Шаг 7: Переименовать APK в понятное название
+      - name: Rename APK file
+        run: |
+          cd app/build/outputs/apk/debug
+          # Находим правильное имя APK файла
+          APK_FILE=$(ls *.apk | head -1)
+          echo "📦 Найден APK файл: $APK_FILE"
+          # Переименовываем
+          mv "$APK_FILE" "BioScanner-${GITHUB_REF#refs/tags/}.apk"
+          echo "✅ APK переименован в: BioScanner-${GITHUB_REF#refs/tags/}.apk"
+
+      # Шаг 8: Создать Release и загрузить APK
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -62,7 +82,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: |
-            ## 🚀 TestBioProcessor ${{ github.ref_name }}
+            ## 🚀 BioScanner ${{ github.ref_name }}
             
             ### 📦 Информация о сборке:
             - Версия: **${{ github.ref_name }}**
@@ -86,19 +106,19 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            app/build/outputs/apk/debug/BScanner.apk
-          asset_name: TestBioProcessor-${{ github.ref_name }}.apk
+            app/build/outputs/apk/debug/BioScanner-${{ github.ref_name }}.apk
+          asset_name: BioScanner-${{ github.ref_name }}.apk
 
-      # Шаг 7: Уведомление об успехе
+      # Шаг 9: Уведомление об успехе
       - name: Success Notification
         if: success()
         run: |
           echo "✅ APK УСПЕШНО СОБРАН И ОПУБЛИКОВАН!"
           echo "---"
-          echo "📱 Приложение: TestBioProcessor"
+          echo "📱 Приложение: BioScanner"
           echo "🏷️ Версия: ${{ github.ref_name }}"
           echo "🔗 API URL: ${{ steps.version.outputs.BASE_URL_PREVIEW }}"
           echo "📅 Собрано: ${{ steps.version.outputs.DATE }}"
-          echo "📦 Файл: TestBioProcessor-${{ github.ref_name }}.apk"
+          echo "📦 Файл: BioScanner-${{ github.ref_name }}.apk"
           echo "---"
           echo "🎉 Пользователи могут скачать APK из раздела Releases!"
